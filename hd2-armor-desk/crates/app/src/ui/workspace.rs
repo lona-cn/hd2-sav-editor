@@ -59,6 +59,17 @@ struct CommitRequest {
     generation: u64,
 }
 
+struct BrowserRow {
+    key: String,
+    name: String,
+    type_label: String,
+    id_hex: String,
+    passive_name: Option<String>,
+    passive_description: Option<String>,
+    usable: bool,
+    selected: bool,
+}
+
 fn begin_commit(
     state_entity: Entity<AppState>,
     request: CommitRequest,
@@ -1274,19 +1285,25 @@ impl WorkspaceView {
                 TargetSlot::Head => state.head_item_key(),
                 TargetSlot::Body => state.body_item_key(),
             };
-            let rows: Vec<(String, String, String, String, bool, bool)> = state
+            let rows: Vec<BrowserRow> = state
                 .browser_items()
                 .into_iter()
                 .take(300)
-                .map(|item| {
-                    (
-                        item.item_key.clone(),
-                        display_name(item),
-                        item.item_type.label().to_string(),
-                        loadout_domain::ItemId(item.id_u32).hex(),
-                        player_usable(item),
-                        selected_key.as_deref() == Some(item.item_key.as_str()),
-                    )
+                .map(|item| BrowserRow {
+                    key: item.item_key.clone(),
+                    name: display_name(item),
+                    type_label: item.item_type.label().to_string(),
+                    id_hex: loadout_domain::ItemId(item.id_u32).hex(),
+                    passive_name: (!item.metadata.passive_tags.is_empty())
+                        .then(|| item.metadata.passive_tags.join(" · ")),
+                    passive_description: item
+                        .metadata
+                        .passive_description
+                        .as_deref()
+                        .filter(|description| !description.trim().is_empty())
+                        .map(str::to_owned),
+                    usable: player_usable(item),
+                    selected: selected_key.as_deref() == Some(item.item_key.as_str()),
                 })
                 .collect();
             let locked_target = state.target_slot == TargetSlot::Body && state.body_locked();
@@ -1468,115 +1485,148 @@ impl WorkspaceView {
                                 ),
                         )
                     })
-                    .children(rows.into_iter().map(
-                        |(key, name, type_label, meta, usable, selected)| {
-                            let key_for_click = key.clone();
-                            div()
-                                .id(SharedString::from(format!("item-{key}")))
-                                .flex()
-                                .items_center()
-                                .justify_between()
-                                .gap_3()
-                                .px_3()
-                                .py_2()
-                                .rounded_md()
-                                .bg(rgb(if selected { ACCENT_DIM } else { BG }))
-                                .border_1()
-                                .border_color(rgb(if selected { ACCENT } else { CARD_BORDER }))
-                                .when(!usable, |this| this.opacity(0.65))
-                                .child(
-                                    div()
-                                        .flex()
-                                        .items_center()
-                                        .gap_3()
-                                        .child(
-                                            div()
-                                                .flex()
-                                                .items_center()
-                                                .justify_center()
-                                                .size(px(30.0))
-                                                .rounded_sm()
-                                                .bg(rgb(if selected {
-                                                    ACCENT
-                                                } else {
-                                                    CARD_RAISED
-                                                }))
-                                                .text_color(rgb(if selected { BG } else { MUTED }))
-                                                .child(if type_label == "身体护甲" {
-                                                    "甲"
-                                                } else {
-                                                    "盔"
-                                                }),
-                                        )
-                                        .child(
-                                            div()
-                                                .flex()
-                                                .flex_col()
-                                                .gap_1()
-                                                .child(
-                                                    div()
-                                                        .text_sm()
-                                                        .text_color(rgb(TEXT))
-                                                        .child(name),
-                                                )
-                                                .child(
-                                                    div()
-                                                        .text_xs()
-                                                        .text_color(rgb(MUTED))
-                                                        .child(meta),
-                                                ),
-                                        ),
-                                )
-                                .child(
-                                    div()
-                                        .flex()
-                                        .items_center()
-                                        .gap_2()
-                                        .child(
-                                            div()
-                                                .px_2()
-                                                .py_1()
-                                                .rounded_sm()
-                                                .bg(rgb(CARD_RAISED))
-                                                .text_xs()
-                                                .text_color(rgb(MUTED))
-                                                .child(type_label),
-                                        )
-                                        .child(
-                                            Button::new(SharedString::from(format!("pick-{key}")))
-                                                .debug_selector({
-                                                    let key = key.clone();
-                                                    move || format!("pick-{key}")
-                                                })
-                                                .label(if locked_target {
-                                                    "先解锁"
-                                                } else if selected {
-                                                    "已选择"
-                                                } else if usable {
-                                                    "选择"
-                                                } else {
-                                                    "不可用"
-                                                })
-                                                .when(selected, |button| button.success())
-                                                .when(usable && !selected, |button| {
-                                                    button.primary()
-                                                })
-                                                .when(locked_target, |button| button.disabled(true))
-                                                .tooltip(if locked_target {
-                                                    "先解除身体槽位保护".to_string()
-                                                } else if usable {
-                                                    format!("应用到{target_label}")
-                                                } else {
-                                                    "此条目缺少可用的装备类型，不能写入".to_string()
-                                                })
-                                                .on_click(cx.listener(move |view, _, _, cx| {
-                                                    view.select_item(&key_for_click, cx);
-                                                })),
-                                        ),
-                                )
-                                .into_any_element()
-                        },
-                    )),
+                    .children(rows.into_iter().map(|row| {
+                        let BrowserRow {
+                            key,
+                            name,
+                            type_label,
+                            id_hex,
+                            passive_name,
+                            passive_description,
+                            usable,
+                            selected,
+                        } = row;
+                        let key_for_click = key.clone();
+                        div()
+                            .id(SharedString::from(format!("item-{key}")))
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .gap_3()
+                            .px_3()
+                            .py_2()
+                            .rounded_md()
+                            .bg(rgb(if selected { ACCENT_DIM } else { BG }))
+                            .border_1()
+                            .border_color(rgb(if selected { ACCENT } else { CARD_BORDER }))
+                            .when(!usable, |this| this.opacity(0.65))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .items_center()
+                                    .gap_3()
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .justify_center()
+                                            .size(px(30.0))
+                                            .rounded_sm()
+                                            .bg(rgb(if selected { ACCENT } else { CARD_RAISED }))
+                                            .text_color(rgb(if selected { BG } else { MUTED }))
+                                            .child(if type_label == "身体护甲" {
+                                                "甲"
+                                            } else {
+                                                "盔"
+                                            }),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_1()
+                                            .min_w_0()
+                                            .flex_col()
+                                            .gap_1()
+                                            .child(
+                                                div().text_sm().text_color(rgb(TEXT)).child(name),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(rgb(MUTED))
+                                                    .child(id_hex),
+                                            )
+                                            .when_some(passive_name, {
+                                                let key = key.clone();
+                                                move |this, passive_name| {
+                                                    this.child(
+                                                        div()
+                                                            .debug_selector(move || {
+                                                                format!("passive-name-{key}")
+                                                            })
+                                                            .text_xs()
+                                                            .text_color(rgb(ACCENT))
+                                                            .child(format!(
+                                                                "被动 · {passive_name}"
+                                                            )),
+                                                    )
+                                                }
+                                            })
+                                            .when_some(passive_description, {
+                                                let key = key.clone();
+                                                move |this, description| {
+                                                    this.child(
+                                                        div()
+                                                            .debug_selector(move || {
+                                                                format!("passive-description-{key}")
+                                                            })
+                                                            .text_xs()
+                                                            .text_color(rgb(MUTED))
+                                                            .child(description),
+                                                    )
+                                                }
+                                            }),
+                                    ),
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap_2()
+                                    .child(
+                                        div()
+                                            .px_2()
+                                            .py_1()
+                                            .rounded_sm()
+                                            .bg(rgb(CARD_RAISED))
+                                            .text_xs()
+                                            .text_color(rgb(MUTED))
+                                            .child(type_label),
+                                    )
+                                    .child(
+                                        Button::new(SharedString::from(format!("pick-{key}")))
+                                            .debug_selector({
+                                                let key = key.clone();
+                                                move || format!("pick-{key}")
+                                            })
+                                            .label(if locked_target {
+                                                "先解锁"
+                                            } else if selected {
+                                                "已选择"
+                                            } else if usable {
+                                                "选择"
+                                            } else {
+                                                "不可用"
+                                            })
+                                            .when(selected, |button| button.success())
+                                            .when(usable && !selected, |button| button.primary())
+                                            .when(locked_target, |button| button.disabled(true))
+                                            .tooltip(if locked_target {
+                                                "先解除身体槽位保护".to_string()
+                                            } else if usable {
+                                                format!("应用到{target_label}")
+                                            } else {
+                                                "此条目缺少可用的装备类型，不能写入".to_string()
+                                            })
+                                            .on_click(cx.listener(move |view, _, _, cx| {
+                                                view.select_item(&key_for_click, cx);
+                                            })),
+                                    ),
+                            )
+                            .into_any_element()
+                    })),
             )
     }
 

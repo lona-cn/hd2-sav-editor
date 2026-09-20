@@ -35,7 +35,7 @@
         "properties": {
           "item_key": {
             "type": "string",
-            "pattern": "^(armor|helmet|cape|unknown):0x[0-9A-F]{8}$"
+            "pattern": "^(armor|primary_weapon|helmet|cape|unknown):0x[0-9A-F]{8}$"
           },
           "id_u32": {
             "type": "integer",
@@ -45,6 +45,7 @@
           "item_type": {
             "enum": [
               "armor",
+              "primary_weapon",
               "helmet",
               "cape",
               "unknown"
@@ -97,6 +98,13 @@
                   "maxLength": 128
                 },
                 "maxItems": 32
+              },
+              "passive_description": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 1024
               },
               "warbond": {
                 "type": [

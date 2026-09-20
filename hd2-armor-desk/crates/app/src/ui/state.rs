@@ -27,24 +27,36 @@ use sav_codec::{SaveImage, MAX_INPUT};
 
 const BUNDLED_CATALOG_JSON: &str = include_str!("../../assets/catalog.v2.json");
 
-fn promote_collected_armors(catalog: &mut Catalog, bundled: &Catalog) -> usize {
-    let verified: Vec<(String, ItemType)> = bundled
+fn sync_bundled_armor_facts(catalog: &mut Catalog, bundled: &Catalog) -> (usize, usize) {
+    let verified: Vec<(String, ItemType, loadout_domain::Metadata)> = bundled
         .items()
         .iter()
         .filter(|item| item.classification == Classification::UserVerified)
-        .map(|item| (item.item_key.clone(), item.item_type))
+        .map(|item| (item.item_key.clone(), item.item_type, item.metadata.clone()))
         .collect();
     let mut promoted = 0;
-    for (item_key, item_type) in verified {
+    let mut enriched = 0;
+    for (item_key, item_type, metadata) in verified {
         let needs_promotion = catalog
             .get(&item_key)
             .map(|item| item.classification != Classification::UserVerified)
             .unwrap_or(false);
-        if needs_promotion && catalog.confirm_type(&item_key, item_type).is_ok() {
-            promoted += 1;
+        let resolved_key = if needs_promotion {
+            match catalog.confirm_type(&item_key, item_type) {
+                Ok(resolved_key) => {
+                    promoted += 1;
+                    resolved_key
+                }
+                Err(_) => item_key,
+            }
+        } else {
+            item_key
+        };
+        if catalog.fill_missing_passive_metadata(&resolved_key, &metadata) {
+            enriched += 1;
         }
     }
-    promoted
+    (promoted, enriched)
 }
 
 /// A loaded import preview plus the decisions made about it.
@@ -155,16 +167,17 @@ impl AppState {
         let (catalog, catalog_status) = if workspace.catalog_path().is_file() {
             match workspace.load_catalog() {
                 Ok(mut catalog) => {
-                    let promoted = promote_collected_armors(&mut catalog, &bundled_catalog);
-                    let status = if promoted == 0 {
+                    let (promoted, enriched) =
+                        sync_bundled_armor_facts(&mut catalog, &bundled_catalog);
+                    let status = if promoted == 0 && enriched == 0 {
                         None
                     } else {
                         Some(match workspace.save_catalog(&catalog) {
                             Ok(()) => StatusLine::info(format!(
-                                "已将 {promoted} 件手工采集护甲标记为已确认"
+                                "已更新目录：确认 {promoted} 件护甲分类，补齐 {enriched} 件护甲被动"
                             )),
                             Err(error) => StatusLine::error(format!(
-                                "护甲已在本次运行中确认，但无法保存目录：{error}"
+                                "目录已在本次运行中更新，但无法保存：{error}"
                             )),
                         })
                     };
@@ -282,6 +295,7 @@ impl AppState {
             Some(SlotIntent::Set { item }) => {
                 let type_note = match item.item_type {
                     ItemType::Armor => "身体护甲",
+                    ItemType::PrimaryWeapon => "主要武器",
                     ItemType::Helmet => "头盔",
                     ItemType::Cape => "披风",
                     ItemType::Unknown => "未知类型",
@@ -869,8 +883,10 @@ pub fn slot_accepts(slot: TargetSlot, item_type: ItemType) -> bool {
 pub fn slot_rejection(slot: TargetSlot, item_type: ItemType) -> String {
     match (slot, item_type) {
         (TargetSlot::Head, ItemType::Cape) => "披风不能放入头部槽位".into(),
+        (TargetSlot::Head, ItemType::PrimaryWeapon) => "主要武器不能放入头部槽位".into(),
         (TargetSlot::Head, ItemType::Unknown) => "目录未提供可用装备类型，不能放入头部槽位".into(),
         (TargetSlot::Body, ItemType::Helmet) => "头盔不能放入身体槽位".into(),
+        (TargetSlot::Body, ItemType::PrimaryWeapon) => "主要武器不能放入身体槽位".into(),
         (TargetSlot::Body, ItemType::Cape) => "披风不能放入身体槽位".into(),
         (TargetSlot::Body, ItemType::Unknown) => "目录未提供可用装备类型，不能放入身体槽位".into(),
         _ => "该类型不能放入此槽位".into(),

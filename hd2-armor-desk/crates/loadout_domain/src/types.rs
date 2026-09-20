@@ -29,6 +29,9 @@ impl std::fmt::Display for ItemId {
 pub enum ItemType {
     /// Body armor. This is the type the head slot is deliberately allowed to hold.
     Armor,
+    /// A primary weapon. It is catalogued for accuracy but cannot occupy armor slots.
+    #[serde(rename = "primary_weapon")]
+    PrimaryWeapon,
     /// A normal helmet.
     Helmet,
     /// A cape.
@@ -42,6 +45,7 @@ impl ItemType {
     pub fn key_prefix(self) -> &'static str {
         match self {
             ItemType::Armor => "armor",
+            ItemType::PrimaryWeapon => "primary_weapon",
             ItemType::Helmet => "helmet",
             ItemType::Cape => "cape",
             ItemType::Unknown => "unknown",
@@ -52,6 +56,7 @@ impl ItemType {
     pub fn label(self) -> &'static str {
         match self {
             ItemType::Armor => "身体护甲",
+            ItemType::PrimaryWeapon => "主要武器",
             ItemType::Helmet => "头盔",
             ItemType::Cape => "披风",
             ItemType::Unknown => "未知类型",

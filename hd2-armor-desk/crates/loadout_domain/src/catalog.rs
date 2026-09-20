@@ -82,6 +82,8 @@ pub struct Metadata {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub passive_tags: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub passive_description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub warbond: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_path: Option<String>,
@@ -323,6 +325,38 @@ impl Catalog {
         self.by_key.insert(key, index);
         self.by_id.entry(id).or_default().push(index);
         self.items.push(item);
+    }
+
+    /// Fill absent passive metadata from a trusted catalog without replacing
+    /// values the user already supplied.
+    pub fn fill_missing_passive_metadata(&mut self, item_key: &str, source: &Metadata) -> bool {
+        let Some(index) = self.by_key.get(item_key).copied() else {
+            return false;
+        };
+        let target = &mut self.items[index].metadata;
+        let mut changed = false;
+        if target.passive_tags.is_empty() && !source.passive_tags.is_empty() {
+            target.passive_tags.clone_from(&source.passive_tags);
+            changed = true;
+        }
+        let target_description_missing = target
+            .passive_description
+            .as_deref()
+            .map(str::trim)
+            .unwrap_or_default()
+            .is_empty();
+        let source_description = source
+            .passive_description
+            .as_deref()
+            .map(str::trim)
+            .filter(|description| !description.is_empty());
+        if target_description_missing {
+            if let Some(description) = source_description {
+                target.passive_description = Some(description.to_string());
+                changed = true;
+            }
+        }
+        changed
     }
 
     /// Merge an observation into an existing item, deduplicating by offset+slot.

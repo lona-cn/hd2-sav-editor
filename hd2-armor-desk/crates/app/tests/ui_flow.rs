@@ -657,6 +657,33 @@ fn stale_restore_receipt_does_not_replace_a_new_document(cx: &mut TestAppContext
     assert_eq!(head, Some(0x0568_48E9));
     assert!(!busy, "旧任务完成后应释放忙碌状态");
 }
+#[gpui_kit::test]
+fn browser_renders_armor_passive_details(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.head_query = "FS-55 蹂躏者（身体护甲）".to_string();
+                state.type_filter = Some(ItemType::Armor);
+                cx.notify();
+            });
+        });
+    });
+    cx.simulate_resize(size(px(1280.0), px(1800.0)));
+    render(&mut cx);
+
+    assert!(
+        cx.debug_bounds("passive-name-armor:0xD3461392").is_some(),
+        "装备库条目应显示被动名称"
+    );
+    assert!(
+        cx.debug_bounds("passive-description-armor:0xD3461392")
+            .is_some(),
+        "装备库条目应显示被动效果"
+    );
+}
 
 #[gpui_kit::test]
 fn first_run_seeds_the_bundled_v2_catalog(cx: &mut TestAppContext) {
@@ -664,7 +691,16 @@ fn first_run_seeds_the_bundled_v2_catalog(cx: &mut TestAppContext) {
     cx.update(gpui_kit::init);
     let state = cx.new(|_| AppState::new());
 
-    let (items, armors, verified_armors, catalog_path) = cx.update(|cx| {
+    let (
+        items,
+        armors,
+        verified_armors,
+        enriched_armors,
+        fs55_passive,
+        demo_trooper_name,
+        trident_type,
+        catalog_path,
+    ) = cx.update(|cx| {
         let state = state.read(cx);
         (
             state.catalog.len(),
@@ -683,14 +719,74 @@ fn first_run_seeds_the_bundled_v2_catalog(cx: &mut TestAppContext) {
                         && item.classification == Classification::UserVerified
                 })
                 .count(),
+            state
+                .catalog
+                .items()
+                .iter()
+                .filter(|item| {
+                    item.item_type == ItemType::Armor
+                        && !item.display_name.trim().is_empty()
+                        && !item.metadata.passive_tags.is_empty()
+                        && item
+                            .metadata
+                            .passive_description
+                            .as_deref()
+                            .is_some_and(|description| !description.trim().is_empty())
+                })
+                .count(),
+            state
+                .catalog
+                .items()
+                .iter()
+                .find(|item| item.display_name == "FS-55 蹂躏者（身体护甲）")
+                .map(|item| {
+                    (
+                        item.metadata.passive_tags.clone(),
+                        item.metadata.passive_description.clone(),
+                    )
+                }),
+            state
+                .catalog
+                .items()
+                .iter()
+                .find(|item| item.id_u32 == 0xA453_85CD)
+                .map(|item| item.display_name.clone()),
+            state
+                .catalog
+                .items()
+                .iter()
+                .find(|item| item.display_name == "LAS-13 三叉戟")
+                .map(|item| item.item_type),
             state.workspace.catalog_path(),
         )
     });
     assert_eq!(items, 93, "应完整加载由 schema 1 转换的内置目录");
-    assert_eq!(armors, 69, "内置目录应包含已观察到的身体护甲");
+    assert_eq!(armors, 68, "内置目录应包含已观察到的身体护甲");
     assert_eq!(
-        verified_armors, 69,
+        verified_armors, 68,
         "本人手工采集的身体护甲应直接标记为已确认"
+    );
+    assert_eq!(
+        enriched_armors, 67,
+        "每件有名称的已识别身体护甲都应附带被动名称和效果"
+    );
+    assert_eq!(
+        fs55_passive,
+        Some((
+            vec!["Fortified".to_string()],
+            Some("蹲下或趴下时后坐力进一步降低 30%；爆炸伤害抗性提高 50%。".to_string()),
+        )),
+        "已知护甲应携带可直接展示的被动详情"
+    );
+    assert_eq!(
+        demo_trooper_name.as_deref(),
+        Some("TG-122 爆破兵"),
+        "爆破兵型号应使用资料源中的 TG-122"
+    );
+    assert_eq!(
+        trident_type,
+        Some(ItemType::PrimaryWeapon),
+        "LAS-13 三叉戟应归类为主要武器而不是身体护甲"
     );
     assert_eq!(catalog_path, env.root().join("catalog.v2.json"));
     let persisted = std::fs::read_to_string(catalog_path).expect("首次启动应落盘内置目录");
@@ -739,15 +835,29 @@ fn existing_seeded_catalog_promotes_collected_armors_to_user_verified(cx: &mut T
             .get("armor:0x01C2A674")
             .expect("采集目录条目应保留");
         assert_eq!(item.classification, Classification::UserVerified);
+        assert_eq!(
+            item.metadata.passive_tags,
+            ["Adreno-Defibrillator"],
+            "旧版便携目录应补齐内置被动名称"
+        );
+        assert!(
+            item.metadata
+                .passive_description
+                .as_deref()
+                .is_some_and(|description| description.contains("短暂复苏")),
+            "旧版便携目录应补齐内置被动效果"
+        );
     });
 
     let persisted = workspace.load_catalog().unwrap();
+    let item = persisted
+        .get("armor:0x01C2A674")
+        .expect("升级后的目录应保存");
+    assert_eq!(item.classification, Classification::UserVerified);
     assert_eq!(
-        persisted
-            .get("armor:0x01C2A674")
-            .expect("升级后的目录应保存")
-            .classification,
-        Classification::UserVerified
+        item.metadata.passive_tags,
+        ["Adreno-Defibrillator"],
+        "补齐的被动元数据应写回便携目录"
     );
 }
 

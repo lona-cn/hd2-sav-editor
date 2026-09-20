@@ -9,7 +9,7 @@
 |---|---|
 | 机器 | Intel(R) Core(TM) Ultra 5 250K Plus |
 | 系统 | Windows 11 Pro 10.0.26200 x64 |
-| 工具链 | `stable`，由 `rust-toolchain.toml` 固定（已验证 stable 下 110 个测试全通过） |
+| 工具链 | `stable`，由 `rust-toolchain.toml` 固定（已验证 stable 下 111 个测试全通过） |
 | 依赖 | `Cargo.lock` 锁定；`gpui-kit 0.6.4` / `gpui-pre 0.3.5` / `gpui-component 0.6.4` |
 | 构建 | `cargo build --release --locked` → `target\release\hd2-armor-desk.exe` |
 
@@ -24,7 +24,7 @@
 | `sav_codec` | 头部/块表解析、raw LZ4 解压与重压、内层 MurmurHash64A-low32、外层 CRC32 IEEE、字节保真重打包、白名单差异校验 |
 | `loadout_domain` | `Snapshot`/`Draft`/撤销栈、`LoadoutIntent`、目录（去重与类型判定）、旧 JSON/CSV/v2 JSON 导入、冲突与非法值报告、预设存取、差异预览 |
 | `local_io` | 稳定读取器、只读监视、备份与 SHA-256、另存、安全写回、基于最新文件的风险写入、回读校验、恢复 |
-| `app` | GPUI 界面：双槽卡片（身体默认解锁）、搜索、导入预览、预设、差异栏、双写回模式、诊断与后台任务 |
+| `app` | GPUI 界面：双槽卡片（身体默认解锁）、搜索、装备库护甲被动详情、导入预览、预设、差异栏、双写回模式、诊断与后台任务 |
 
 ### 验收对照（自动测试）
 
@@ -71,11 +71,11 @@
 `ui_flow::restore_is_reachable_and_whole_file_scoped` 与
 `ui_flow::recording_a_restore_rebuilds_the_document_from_disk` 覆盖该路径。
 
-合计：**110 passed, 0 failed**（`cargo test --workspace --locked`，stable 工具链）。
+合计：**111 passed, 0 failed**（`cargo test --workspace --locked`，stable 工具链）。
 
 ### 平台验证
 
-- Windows 11 x64：110 个测试通过；重建程序已实际启动并点击到双模式写回确认框。
+- Windows 11 x64：111 个测试通过；重建程序已实际启动并点击到双模式写回确认框。
 - `cargo fmt --all -- --check` 通过；`cargo clippy --workspace --all-targets --locked -- -D warnings` 通过。
 - release 构建通过；Linux **未验证**（本项目为 Windows 目标）。
 

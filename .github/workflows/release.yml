@@ -7,12 +7,17 @@ on:
       - master
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
-    name: Build Windows release
+  test:
+    name: Test Windows workspace
     runs-on: windows-latest
+    concurrency:
+      group: release-test-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      CARGO_PROFILE_TEST_DEBUG: 0
 
     steps:
       - name: Check out source
@@ -26,15 +31,48 @@ jobs:
           rustc --version
           cargo --version
 
+      - name: Restore Rust dependency cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: hd2-armor-desk -> target
+
       - name: Run tests
         working-directory: hd2-armor-desk
         shell: pwsh
         run: cargo test --workspace --locked
 
+  build:
+    name: Build Windows release
+    runs-on: windows-latest
+    concurrency:
+      group: release-build-${{ github.ref }}
+      cancel-in-progress: true
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      built_at: ${{ steps.version.outputs.built_at }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select pinned Rust toolchain
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
+
+      - name: Restore Rust dependency cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: hd2-armor-desk -> target
+
       - name: Build release executable
         working-directory: hd2-armor-desk
         shell: pwsh
-        run: cargo build --workspace --release --locked
+        run: cargo build -p hd2-armor-desk --release --locked
 
       - name: Generate UTC+8 version
         id: version
@@ -48,7 +86,6 @@ jobs:
           "built_at=$builtAt" >> $env:GITHUB_OUTPUT
 
       - name: Package Windows release
-        id: package
         shell: pwsh
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
@@ -61,10 +98,12 @@ jobs:
 
           $packageName = "hd2-armor-desk-windows-x64-$env:RELEASE_VERSION"
           $packageDir = Join-Path $env:RUNNER_TEMP $packageName
-          $archive = Join-Path $env:RUNNER_TEMP "$packageName.zip"
+          $outputDir = Join-Path $env:RUNNER_TEMP "release-output"
+          $archive = Join-Path $outputDir "$packageName.zip"
           $checksumFile = "$archive.sha256"
 
           New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
           $imageDir = Join-Path $packageDir "docs\images"
           New-Item -ItemType Directory -Path $imageDir -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination $packageDir
@@ -84,19 +123,50 @@ jobs:
           $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath $checksumFile -Encoding ascii
 
-          "archive=$archive" >> $env:GITHUB_OUTPUT
-          "checksum=$checksumFile" >> $env:GITHUB_OUTPUT
+      - name: Upload packaged release
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: packaged-release
+          path: ${{ runner.temp }}/release-output/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+  publish:
+    name: Publish GitHub release
+    needs:
+      - test
+      - build
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged release
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: packaged-release
+          path: ${{ runner.temp }}/release-output
 
       - name: Publish GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          BUILT_AT: ${{ steps.version.outputs.built_at }}
-          ARCHIVE: ${{ steps.package.outputs.archive }}
-          CHECKSUM: ${{ steps.package.outputs.checksum }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          BUILT_AT: ${{ needs.build.outputs.built_at }}
         run: |
+          $releaseDir = Join-Path $env:RUNNER_TEMP "release-output"
+          $packageName = "hd2-armor-desk-windows-x64-$env:RELEASE_VERSION"
+          $archive = Join-Path $releaseDir "$packageName.zip"
+          $checksum = "$archive.sha256"
+          if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
+            throw "Packaged release was not downloaded: $archive"
+          }
+          if (-not (Test-Path -LiteralPath $checksum -PathType Leaf)) {
+            throw "Release checksum was not downloaded: $checksum"
+          }
+
           $notesFile = Join-Path $env:RUNNER_TEMP "release-notes.md"
           @"
           此版本由 GitHub Actions 在 $env:GITHUB_REF_NAME 分支提交后自动构建。
@@ -111,7 +181,7 @@ jobs:
 
           $arguments = @(
             "release", "create", $env:RELEASE_TAG,
-            $env:ARCHIVE, $env:CHECKSUM,
+            $archive, $checksum,
             "--repo", $env:GITHUB_REPOSITORY,
             "--target", $env:GITHUB_SHA,
             "--title", "HD2 Armor Desk $env:RELEASE_VERSION",

@@ -21,7 +21,7 @@
 cargo test --workspace --locked
 ```
 
-结果：**110 passed, 0 failed**（stable 工具链）。
+结果：**111 passed, 0 failed**（stable 工具链）。
 
 | 套件 | 通过 | 覆盖内容 |
 |---|---|---|
@@ -33,7 +33,7 @@ cargo test --workspace --locked
 | `loadout_domain` validation | 14 | schema 与运行时语义校验、非法 u32 |
 | `local_io` unit + monitor | 1 + 9 | 工作区、稳定窗口、半写入、generation、监视不写盘 |
 | `local_io` transactions | 15 | 另存、安全写回、风险写入最新文件、备份、恢复 |
-| `app` ui_flow | 18 | 真实 GPUI 窗口内派发鼠标事件与隔离文件写回 |
+| `app` ui_flow | 19 | 真实 GPUI 窗口内派发鼠标事件、装备库被动详情与隔离文件写回 |
 
 ### ui_flow 说明（UI 点击不是静态断言）
 
@@ -45,6 +45,7 @@ cargo test --workspace --locked
 | 测试 | 断言 |
 |---|---|
 | `opening_a_save_populates_both_slot_cards` | 打开 `valid_baseline.bin` 后 `head_id==0x056848E9`、`body_id==0xD3461392`（与 manifest 一致）；两卡片与写回/撤销按钮均已布局 |
+| `browser_renders_armor_passive_details` | 搜索 FS-55 后，被动名称与中文效果说明均进入实际 GPUI 布局 |
 | `body_starts_unlocked_and_can_be_locked_without_writing` | 开档即建立干净草稿、身体默认解锁；点「锁定身体」后 `body_locked==true` 且不产生写回 |
 | `risk_write_rebases_the_head_choice_onto_the_games_new_body_value` | 真实点击选择头甲、打开确认框并执行风险写入；用户头甲落盘，游戏刚切换的身体甲保留 |
 | `selecting_the_body_slot_then_the_head_slot_moves_the_target` | 点身体卡片 → `target_slot==Body`；点头部卡片 → 回到 `Head` |
@@ -89,6 +90,7 @@ cargo test --workspace --locked
 | 写回确认 | 实际桌面确认同时显示「风险写入最新文件」与「安全写回」及风险说明 |
 | 源文件安全 | 未点击最终写入，仓库 fixture 内容未改动 |
 | 截图 | 本轮使用临时截图检查，验证完成后删除 |
+| 本次被动详情冒烟 | release 进程成功启动并生成含 67 件护甲被动的便携目录；工作站处于锁屏界面，无法取得可信桌面像素截图，行内布局由 `browser_renders_armor_passive_details` 验证 |
 
 资源占用（同机采样，采样方法见上表）：
 
@@ -113,7 +115,7 @@ cargo test --workspace --locked
 
 ## 5. 结论
 
-数据正确性、目录/预设与风险写入中可自动验证的部分已由 110 个测试覆盖并通过；
+数据正确性、目录/预设与风险写入中可自动验证的部分已由 111 个测试覆盖并通过；
 玩家体验中「卡片选择、身体默认解锁、无改动禁用写回、只读版本拒绝写入、
 风险写入最新文件」已由真实事件派发的 UI 测试覆盖。**游戏内验收（G 类）仍需用户在本地完成**，
 不应把本工具视为已通过完整验收。

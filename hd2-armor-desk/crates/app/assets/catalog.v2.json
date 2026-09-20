@@ -11,7 +11,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Adreno-Defibrillator"
+        ],
+        "passive_description": "死亡后若身体仍完整，可获得一次短暂复苏；针剂效果延长 2 秒；电弧伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -32,7 +37,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Siege-Ready"
+        ],
+        "passive_description": "主武器换弹速度提高 30%；所有武器弹药容量提高 20%（不影响武器背包）。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -53,7 +63,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Ballistic Padding"
+        ],
+        "passive_description": "胸部伤害抗性提高 25%；爆炸伤害抗性提高 25%；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -74,7 +89,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Adreno-Defibrillator"
+        ],
+        "passive_description": "死亡后若身体仍完整，可获得一次短暂复苏；针剂效果延长 2 秒；电弧伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -95,7 +115,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Desert Stormer"
+        ],
+        "passive_description": "火焰、毒气、酸液与电击伤害抗性提高 40%；投掷距离提高 20%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -116,7 +141,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Servo-Assisted"
+        ],
+        "passive_description": "投掷距离提高 30%；肢体生命值提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -158,7 +188,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Feet First"
+        ],
+        "passive_description": "移动噪声降低 50%；兴趣点识别范围提高 30%；免疫腿部受伤。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -179,7 +214,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Gunslinger"
+        ],
+        "passive_description": "副武器换弹速度提高 40%；拔出与收起速度提高 50%；副武器后坐力降低 70%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -221,7 +261,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -242,7 +287,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Med-Kit"
+        ],
+        "passive_description": "针剂初始数量与携带上限 +2；针剂效果延长 2 秒。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -263,7 +313,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -284,7 +339,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Scout"
+        ],
+        "passive_description": "地图标记每 2 秒产生一次雷达扫描；敌人侦测穿戴者的距离降低 30%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -305,7 +365,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Inflammable"
+        ],
+        "passive_description": "火焰伤害抗性提高 75%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -326,7 +391,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Electrical Conduit"
+        ],
+        "passive_description": "电弧伤害抗性提高 95%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -368,7 +438,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Engineering Kit"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -389,7 +464,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Fortified"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；爆炸伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -431,7 +511,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Inflammable"
+        ],
+        "passive_description": "火焰伤害抗性提高 75%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -494,7 +579,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Reinforced Epaulettes"
+        ],
+        "passive_description": "主武器换弹速度提高 30%；有 50% 概率避免严重肢体受伤；近战伤害提高 20%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -599,7 +689,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Med-Kit"
+        ],
+        "passive_description": "针剂初始数量与携带上限 +2；针剂效果延长 2 秒。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -641,7 +736,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Servo-Assisted"
+        ],
+        "passive_description": "投掷距离提高 30%；肢体生命值提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -662,7 +762,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Democracy Protects"
+        ],
+        "passive_description": "受到致命伤害时有 50% 概率存活；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -683,7 +788,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Ballistic Padding"
+        ],
+        "passive_description": "胸部伤害抗性提高 25%；爆炸伤害抗性提高 25%；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -704,7 +814,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Desert Stormer"
+        ],
+        "passive_description": "火焰、毒气、酸液与电击伤害抗性提高 40%；投掷距离提高 20%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -746,7 +861,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -830,7 +950,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Acclimated"
+        ],
+        "passive_description": "火焰、毒气、酸液与电击伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -851,7 +976,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Inflammable"
+        ],
+        "passive_description": "火焰伤害抗性提高 75%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -872,7 +1002,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Engineering Kit"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -893,7 +1028,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Scout"
+        ],
+        "passive_description": "地图标记每 2 秒产生一次雷达扫描；敌人侦测穿戴者的距离降低 30%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -914,7 +1054,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Advanced Filtration"
+        ],
+        "passive_description": "毒气伤害与毒气效果抗性提高 80%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -935,7 +1080,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "True Grit"
+        ],
+        "passive_description": "支援武器换弹速度提高 30%；略微改善武器操控，降低武器转向拖滞。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -956,7 +1106,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -977,7 +1132,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -998,7 +1158,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Fortified"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；爆炸伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1019,7 +1184,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1124,7 +1294,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Peak Physique"
+        ],
+        "passive_description": "近战伤害提高 40%；改善武器操控，降低武器转向拖滞。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1145,7 +1320,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Engineering Kit"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1187,7 +1367,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Med-Kit"
+        ],
+        "passive_description": "针剂初始数量与携带上限 +2；针剂效果延长 2 秒。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1208,7 +1393,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Integrated Explosives"
+        ],
+        "passive_description": "穿戴者死亡 1.5 秒后护甲爆炸；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1225,11 +1415,16 @@
       "item_key": "armor:0xA45385CD",
       "id_u32": 2756937165,
       "item_type": "armor",
-      "display_name": "TG-112爆破兵",
+      "display_name": "TG-122 爆破兵",
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "True Grit"
+        ],
+        "passive_description": "支援武器换弹速度提高 30%；略微改善武器操控，降低武器转向拖滞。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1271,7 +1466,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Electrical Conduit"
+        ],
+        "passive_description": "电弧伤害抗性提高 95%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1285,9 +1485,9 @@
       ]
     },
     {
-      "item_key": "armor:0xAB1B4972",
+      "item_key": "primary_weapon:0xAB1B4972",
       "id_u32": 2870692210,
-      "item_type": "armor",
+      "item_type": "primary_weapon",
       "display_name": "LAS-13 三叉戟",
       "aliases": [],
       "classification": "user_verified",
@@ -1349,7 +1549,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Kinetic Displacement Mitigation"
+        ],
+        "passive_description": "火焰伤害抗性提高 50%；有 50% 概率避免严重肢体受伤；冲击与碰撞伤害降低 30%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1370,7 +1575,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Integrated Explosives"
+        ],
+        "passive_description": "穿戴者死亡 1.5 秒后护甲爆炸；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1391,7 +1601,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Unflinching"
+        ],
+        "passive_description": "降低中弹时的硬直；提高护甲值；地图标记每 2 秒产生一次雷达扫描。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1412,7 +1627,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Gunslinger"
+        ],
+        "passive_description": "副武器换弹速度提高 40%；拔出与收起速度提高 50%；副武器后坐力降低 70%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1433,7 +1653,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Democracy Protects"
+        ],
+        "passive_description": "受到致命伤害时有 50% 概率存活；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1454,7 +1679,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Unflinching"
+        ],
+        "passive_description": "降低中弹时的硬直；提高护甲值；地图标记每 2 秒产生一次雷达扫描。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1475,7 +1705,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Supplementary Adrenaline"
+        ],
+        "passive_description": "受到伤害时恢复部分耐力；提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1496,7 +1731,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Scout"
+        ],
+        "passive_description": "地图标记每 2 秒产生一次雷达扫描；敌人侦测穿戴者的距离降低 30%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1538,7 +1778,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Reinforced Epaulettes"
+        ],
+        "passive_description": "主武器换弹速度提高 30%；有 50% 概率避免严重肢体受伤；近战伤害提高 20%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1559,7 +1804,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Supplementary Adrenaline"
+        ],
+        "passive_description": "受到伤害时恢复部分耐力；提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1580,7 +1830,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Scout"
+        ],
+        "passive_description": "地图标记每 2 秒产生一次雷达扫描；敌人侦测穿戴者的距离降低 30%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1601,7 +1856,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Democracy Protects"
+        ],
+        "passive_description": "受到致命伤害时有 50% 概率存活；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1622,7 +1882,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Extra Padding"
+        ],
+        "passive_description": "提高护甲值。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1643,7 +1908,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Fortified"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；爆炸伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 289,
@@ -1673,7 +1943,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Siege-Ready"
+        ],
+        "passive_description": "主武器换弹速度提高 30%；所有武器弹药容量提高 20%（不影响武器背包）。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1694,7 +1969,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Electrical Conduit"
+        ],
+        "passive_description": "电弧伤害抗性提高 95%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1715,7 +1995,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Feet First"
+        ],
+        "passive_description": "移动噪声降低 50%；兴趣点识别范围提高 30%；免疫腿部受伤。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1736,7 +2021,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Servo-Assisted"
+        ],
+        "passive_description": "投掷距离提高 30%；肢体生命值提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1778,7 +2068,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Rock Solid"
+        ],
+        "passive_description": "近战伤害提高 40%；更不容易被击倒。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1799,7 +2094,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Oxygenator"
+        ],
+        "passive_description": "提高步行与奔跑速度；提高滑铲速度并延长滑铲时间。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1820,7 +2120,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Democracy Protects"
+        ],
+        "passive_description": "受到致命伤害时有 50% 概率存活；胸部出血时免受全部流血伤害。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1862,7 +2167,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Advanced Filtration"
+        ],
+        "passive_description": "毒气伤害与毒气效果抗性提高 80%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1883,7 +2193,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Rock Solid"
+        ],
+        "passive_description": "近战伤害提高 40%；更不容易被击倒。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1904,7 +2219,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Fortified"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；爆炸伤害抗性提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1946,7 +2266,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Servo-Assisted"
+        ],
+        "passive_description": "投掷距离提高 30%；肢体生命值提高 50%。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1967,7 +2292,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Oxygenator"
+        ],
+        "passive_description": "提高步行与奔跑速度；提高滑铲速度并延长滑铲时间。"
+      },
       "observations": [
         {
           "observed_offset": 297,
@@ -1988,7 +2318,12 @@
       "aliases": [],
       "classification": "user_verified",
       "favorite": false,
-      "metadata": {},
+      "metadata": {
+        "passive_tags": [
+          "Engineering Kit"
+        ],
+        "passive_description": "蹲下或趴下时后坐力进一步降低 30%；投掷物初始数量与携带上限 +2。"
+      },
       "observations": [
         {
           "observed_offset": 297,

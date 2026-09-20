@@ -244,6 +244,7 @@ fn check_head_type(item: &ItemRef) -> Result<(), ValidationError> {
     match item.item_type {
         // The core requirement: a body armor may occupy the head slot.
         ItemType::Armor | ItemType::Helmet => Ok(()),
+        ItemType::PrimaryWeapon => Err(ValidationError::HeadTypeNotAllowed("主要武器")),
         ItemType::Cape => Err(ValidationError::HeadTypeNotAllowed("披风")),
         ItemType::Unknown => Err(ValidationError::UnknownItemNotConfirmed(item.label())),
     }
@@ -252,6 +253,7 @@ fn check_head_type(item: &ItemRef) -> Result<(), ValidationError> {
 fn check_body_type(item: &ItemRef) -> Result<(), ValidationError> {
     match item.item_type {
         ItemType::Armor => Ok(()),
+        ItemType::PrimaryWeapon => Err(ValidationError::BodyTypeNotAllowed("主要武器")),
         ItemType::Helmet => Err(ValidationError::BodyTypeNotAllowed("头盔")),
         ItemType::Cape => Err(ValidationError::BodyTypeNotAllowed("披风")),
         ItemType::Unknown => Err(ValidationError::UnknownItemNotConfirmed(item.label())),
