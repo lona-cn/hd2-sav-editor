@@ -772,9 +772,11 @@ impl WorkspaceView {
         let state_entity = self.state.clone();
 
         window.open_dialog(cx, move |dialog, _, _| {
-            let safe_state = state_entity.clone();
+            let safe_click_state = state_entity.clone();
+            let safe_keyboard_state = state_entity.clone();
             let force_state = state_entity.clone();
-            let safe_request = request.clone();
+            let safe_click_request = request.clone();
+            let safe_keyboard_request = request.clone();
             let force_request = request.clone();
             let summary = summary.clone();
             let details = details.clone();
@@ -802,38 +804,46 @@ impl WorkspaceView {
                 .footer(
                     DialogFooter::new()
                         .child(
-                            DialogAction::new().child(
-                                Button::new("force-latest")
-                                    .debug_selector(|| "action-force-latest".into())
-                                    .label("风险写入最新文件")
-                                    .ghost()
-                                    .tooltip("保留最新文件的其他内容，并覆盖所选护甲槽位")
-                                    .on_click(move |_, window, cx| {
-                                        if begin_commit(
-                                            force_state.clone(),
-                                            force_request.clone(),
-                                            CommitMode::ForceLatest,
-                                            window,
-                                            cx,
-                                        ) {
-                                            window.close_dialog(cx);
-                                        }
-                                    }),
-                            ),
+                            Button::new("force-latest")
+                                .debug_selector(|| "action-force-latest".into())
+                                .label("风险写入最新文件")
+                                .ghost()
+                                .tooltip("保留最新文件的其他内容，并覆盖所选护甲槽位")
+                                .on_click(move |_, window, cx| {
+                                    if begin_commit(
+                                        force_state.clone(),
+                                        force_request.clone(),
+                                        CommitMode::ForceLatest,
+                                        window,
+                                        cx,
+                                    ) {
+                                        window.close_dialog(cx);
+                                    }
+                                }),
                         )
                         .child(
-                            DialogAction::new().child(
-                                Button::new("ok")
-                                    .label("安全写回")
-                                    .primary()
-                                    .tooltip("源文件变化时拒绝写入"),
-                            ),
+                            Button::new("safe-write")
+                                .debug_selector(|| "action-safe-write".into())
+                                .label("安全写回")
+                                .primary()
+                                .tooltip("源文件变化时拒绝写入")
+                                .on_click(move |_, window, cx| {
+                                    if begin_commit(
+                                        safe_click_state.clone(),
+                                        safe_click_request.clone(),
+                                        CommitMode::Safe,
+                                        window,
+                                        cx,
+                                    ) {
+                                        window.close_dialog(cx);
+                                    }
+                                }),
                         ),
                 )
                 .on_ok(move |_, window, cx| {
                     begin_commit(
-                        safe_state.clone(),
-                        safe_request.clone(),
+                        safe_keyboard_state.clone(),
+                        safe_keyboard_request.clone(),
                         CommitMode::Safe,
                         window,
                         cx,

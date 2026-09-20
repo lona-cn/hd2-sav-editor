@@ -271,6 +271,68 @@ fn risk_write_rebases_the_head_choice_onto_the_games_new_body_value(cx: &mut Tes
 }
 
 #[gpui_kit::test]
+fn safe_write_mouse_click_commits_the_selected_armor(cx: &mut TestAppContext) {
+    let env = ScratchEnv::install();
+    let live = env.root().join("safe_write.sav");
+    std::fs::copy(fixture("valid_baseline.bin"), &live).unwrap();
+
+    let (view, mut cx) = build(cx);
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| view.open_initial_path(live.clone(), cx));
+    });
+    cx.run_until_parked();
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.head_query = "0x01C2A674".to_string();
+                cx.notify();
+            });
+        });
+    });
+    cx.simulate_resize(size(px(1280.0), px(1800.0)));
+    click(&mut cx, "pick-armor:0x01C2A674");
+    click(&mut cx, "action-commit");
+    assert!(
+        cx.update(|window, cx| window.has_active_dialog(cx)),
+        "写回应先显示模式确认"
+    );
+
+    click(&mut cx, "action-safe-write");
+
+    let (verified, backup_path, dirty, busy) = cx.update(|_, cx| {
+        let state = view.read(cx).state().read(cx);
+        let receipt = state.last_commit.as_ref();
+        (
+            receipt
+                .map(|receipt| receipt.is_verified())
+                .unwrap_or(false),
+            receipt.and_then(|receipt| receipt.backup_path.clone()),
+            state.is_dirty(),
+            state.save_in_flight,
+        )
+    });
+    assert!(verified, "安全写回应完成回读校验");
+    assert!(
+        backup_path.as_ref().is_some_and(|path| path.is_file()),
+        "安全写回应先生成独立备份"
+    );
+    assert!(!dirty, "成功安全写回后草稿应变为干净");
+    assert!(!busy, "安全写回任务应结束");
+
+    let written = SaveImage::decode(std::fs::read(&live).unwrap()).unwrap();
+    assert_eq!(
+        written.read_u32(fields::HEAD).unwrap(),
+        0x01C2_A674,
+        "鼠标确认的安全写回必须写入用户选择的头部护甲"
+    );
+    assert_eq!(
+        written.read_u32(fields::BODY).unwrap(),
+        0xD346_1392,
+        "安全写回必须保留未编辑的身体槽位"
+    );
+}
+
+#[gpui_kit::test]
 fn reopening_the_same_save_completes_instead_of_stalling(cx: &mut TestAppContext) {
     let _env = ScratchEnv::install();
     let (view, mut cx) = build(cx);
