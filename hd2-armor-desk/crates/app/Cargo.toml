@@ -1,0 +1,25 @@
+[package]
+name = "hd2-armor-desk"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "HD2 Armor Desk - visual dual-armor loadout configurator for HELLDIVERS 2 saves"
+default-run = "hd2-armor-desk"
+
+[[bin]]
+name = "hd2-armor-desk"
+path = "src/main.rs"
+
+[dependencies]
+sav_codec.workspace = true
+loadout_domain.workspace = true
+local_io.workspace = true
+gpui-kit = { version = "0.6.4" }
+rfd = { version = "0.15.3", default-features = false }
+
+[dev-dependencies]
+gpui-kit = { version = "0.6.4", features = ["test-support"] }
+local_io.workspace = true
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"

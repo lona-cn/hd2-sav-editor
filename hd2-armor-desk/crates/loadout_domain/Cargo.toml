@@ -1,0 +1,16 @@
+[package]
+name = "loadout_domain"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Armor catalog, loadout intent, presets, validation and human-readable diff"
+
+[dependencies]
+sav_codec.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+csv.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+sha2.workspace = true

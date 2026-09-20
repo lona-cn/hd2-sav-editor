@@ -1,0 +1,20 @@
+{
+  "generated_on": "2026-09-19",
+  "fixtures_total": 14,
+  "fixtures_valid_known": 6,
+  "fixtures_unknown_readonly": 1,
+  "fixtures_expected_invalid": 7,
+  "murmur_vector_count": 228,
+  "schemas_checked": 2,
+  "example_schema_validations_passed": 2,
+  "private_saves_bundled": false,
+  "rust_application_implemented": false,
+  "windows_runtime_tested_this_turn": false,
+  "markdown_files_link_checked": 9,
+  "source_reference_files_byte_identical": true,
+  "source_python_tests_passed": 42,
+  "source_python_gui_tests_executed_on": "Linux/Xvfb",
+  "local_markdown_links_valid": true,
+  "markdown_code_fences_balanced": true,
+  "system_font_files_bundled": false
+}

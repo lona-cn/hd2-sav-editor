@@ -1,0 +1,59 @@
+# Rust build output
+/target/
+/hd2-armor-desk/target/
+/target-*/
+/hd2-armor-desk/target-*/
+**/*.rs.bk
+
+# Armor Desk runtime data and player saves
+/workspace/
+/hd2-armor-desk/workspace/
+*.sav
+*.sav.*
+
+# Local handoff/build archives
+/HD2_Rust_GPUI_Handoff.zip
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+env/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local tooling indexes
+.codegraph/
+
+# Logs, crash dumps, and temporary files
+*.log
+*.dmp
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+desktop.ini

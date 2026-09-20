@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "preset_id": "fs55-head-keep-body",
+  "name": "FS-55 放头部，身体保持",
+  "note": "示例，只保存意图，不保存账户/存档快照",
+  "tags": [
+    "演示"
+  ],
+  "head": {
+    "operation": "set",
+    "item": {
+      "item_key": "armor:0xD3461392",
+      "id_u32": 3544585106,
+      "item_type": "armor",
+      "label_snapshot": "FS-55 蹂躏者（身体护甲）"
+    }
+  },
+  "body": {
+    "operation": "keep"
+  },
+  "created_at": "2026-09-19T00:00:00Z",
+  "updated_at": "2026-09-19T00:00:00Z"
+}

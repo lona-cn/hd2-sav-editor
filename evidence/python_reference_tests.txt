@@ -1,0 +1,47 @@
+test_bad_inner_rejected (test_core.CodecTests.test_bad_inner_rejected) ... ok
+test_bad_outer_rejected (test_core.CodecTests.test_bad_outer_rejected) ... ok
+test_byte_diff_full_offsets (test_core.CodecTests.test_byte_diff_full_offsets) ... ok
+test_changed_length_rejected (test_core.CodecTests.test_changed_length_rejected) ... ok
+test_diff_size_mismatch (test_core.CodecTests.test_diff_size_mismatch) ... ok
+test_dual_checksum_roundtrip (test_core.CodecTests.test_dual_checksum_roundtrip) ... ok
+test_editor_external_conflict_not_silently_merged (test_core.CodecTests.test_editor_external_conflict_not_silently_merged) ... ok
+test_editor_overlap_rejected (test_core.CodecTests.test_editor_overlap_rejected) ... ok
+test_editor_revert (test_core.CodecTests.test_editor_revert) ... ok
+test_editor_same_value_not_dirty (test_core.CodecTests.test_editor_same_value_not_dirty) ... ok
+test_header_readonly (test_core.CodecTests.test_header_readonly) ... ok
+test_later_block_edit_preserves_untouched_blocks (test_core.CodecTests.test_later_block_edit_preserves_untouched_blocks) ... ok
+test_noop_is_byte_identical (test_core.CodecTests.test_noop_is_byte_identical) ... ok
+test_parse_integer (test_core.CodecTests.test_parse_integer) ... ok
+test_truncated (test_core.CodecTests.test_truncated) ... ok
+test_unknown_layout_readonly (test_core.CodecTests.test_unknown_layout_readonly) ... ok
+test_catalog_id_zero_and_all_ones_not_autocollected (test_core.FileTests.test_catalog_id_zero_and_all_ones_not_autocollected) ... ok
+test_catalog_name_separate_from_same_display_name (test_core.FileTests.test_catalog_name_separate_from_same_display_name) ... ok
+test_export_catalog_and_deduplicate (test_core.FileTests.test_export_catalog_and_deduplicate) ... ok
+test_invalid_catalog_does_not_overwrite (test_core.FileTests.test_invalid_catalog_does_not_overwrite) ... ok
+test_invalid_output_not_saved (test_core.FileTests.test_invalid_output_not_saved) ... ok
+test_overwrite_with_backup (test_core.FileTests.test_overwrite_with_backup) ... ok
+test_save_as (test_core.FileTests.test_save_as) ... ok
+test_save_as_refuses_existing (test_core.FileTests.test_save_as_refuses_existing) ... ok
+test_save_conflict_refuses_and_preserves_disk (test_core.FileTests.test_save_conflict_refuses_and_preserves_disk) ... ok
+test_missing_file (test_core.MonitorTests.test_missing_file) ... ok
+test_new_data_restarts_gate (test_core.MonitorTests.test_new_data_restarts_gate) ... ok
+test_stability_gate (test_core.MonitorTests.test_stability_gate) ... ok
+test_worker_ignores_partial_file_and_eventually_loads (test_core.MonitorTests.test_worker_ignores_partial_file_and_eventually_loads) ... ok
+test_auto_save_id_table (test_gui.GuiTests.test_auto_save_id_table) ... ok
+test_catalog_records_real_read_not_staged (test_gui.GuiTests.test_catalog_records_real_read_not_staged) ... ok
+test_clean_live_read_updates_display (test_gui.GuiTests.test_clean_live_read_updates_display) ... ok
+test_edit_row_visible_at_default_size (test_gui.GuiTests.test_edit_row_visible_at_default_size) ... ok
+test_helmet_row (test_gui.GuiTests.test_helmet_row) ... ok
+test_no_user_save_written_on_observation (test_gui.GuiTests.test_no_user_save_written_on_observation) ... ok
+test_non_sav_export_cannot_target_source (test_gui.GuiTests.test_non_sav_export_cannot_target_source) ... ok
+test_pending_edits_are_not_rebased (test_gui.GuiTests.test_pending_edits_are_not_rebased) ... ok
+test_save_buttons_visible_at_default_size (test_gui.GuiTests.test_save_buttons_visible_at_default_size) ... ok
+test_unknown_layout_no_autocapture (test_gui.GuiTests.test_unknown_layout_no_autocapture) ... ok
+test_window_has_four_tabs (test_gui.GuiTests.test_window_has_four_tabs) ... ok
+test_manual_refresh_when_monitor_paused (test_gui.PollTests.test_manual_refresh_when_monitor_paused) ... ok
+test_monitor_reads_new_valid_file_after_partial_write (test_gui.PollTests.test_monitor_reads_new_valid_file_after_partial_write) ... ok
+
+----------------------------------------------------------------------
+Ran 42 tests in 5.049s
+
+OK

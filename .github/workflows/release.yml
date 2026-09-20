@@ -1,0 +1,125 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build Windows release
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select pinned Rust toolchain
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
+
+      - name: Run tests
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        run: cargo test --workspace --locked
+
+      - name: Build release executable
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        run: cargo build --workspace --release --locked
+
+      - name: Generate UTC+8 version
+        id: version
+        shell: pwsh
+        run: |
+          $utc8 = [DateTimeOffset]::UtcNow.ToOffset([TimeSpan]::FromHours(8))
+          $version = $utc8.ToString("yyyyMMdd-HHmmssfff-'UTC8'", [Globalization.CultureInfo]::InvariantCulture)
+          $builtAt = $utc8.ToString("yyyy-MM-dd HH:mm:ss.fff zzz", [Globalization.CultureInfo]::InvariantCulture)
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=release-$version" >> $env:GITHUB_OUTPUT
+          "built_at=$builtAt" >> $env:GITHUB_OUTPUT
+
+      - name: Package Windows release
+        id: package
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          BUILT_AT: ${{ steps.version.outputs.built_at }}
+        run: |
+          $binary = Join-Path $env:GITHUB_WORKSPACE "hd2-armor-desk\target\release\hd2-armor-desk.exe"
+          if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
+            throw "Release executable was not produced: $binary"
+          }
+
+          $packageName = "hd2-armor-desk-windows-x64-$env:RELEASE_VERSION"
+          $packageDir = Join-Path $env:RUNNER_TEMP $packageName
+          $archive = Join-Path $env:RUNNER_TEMP "$packageName.zip"
+          $checksumFile = "$archive.sha256"
+
+          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          $imageDir = Join-Path $packageDir "docs\images"
+          New-Item -ItemType Directory -Path $imageDir -Force | Out-Null
+          Copy-Item -LiteralPath $binary -Destination $packageDir
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "README.md") -Destination $packageDir
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "LICENSE") -Destination $packageDir
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "docs\images\armor-desk-overview.png") -Destination $imageDir
+
+          @"
+          HD2 Armor Desk
+          Version: $env:RELEASE_VERSION
+          Built at (UTC+8): $env:BUILT_AT
+          Commit: $env:GITHUB_SHA
+          Branch: $env:GITHUB_REF_NAME
+          "@ | Set-Content -LiteralPath (Join-Path $packageDir "VERSION.txt") -Encoding utf8
+
+          Compress-Archive -Path (Join-Path $packageDir "*") -DestinationPath $archive -CompressionLevel Optimal
+          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath $checksumFile -Encoding ascii
+
+          "archive=$archive" >> $env:GITHUB_OUTPUT
+          "checksum=$checksumFile" >> $env:GITHUB_OUTPUT
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          BUILT_AT: ${{ steps.version.outputs.built_at }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          CHECKSUM: ${{ steps.package.outputs.checksum }}
+        run: |
+          $notesFile = Join-Path $env:RUNNER_TEMP "release-notes.md"
+          @"
+          此版本由 GitHub Actions 在 $env:GITHUB_REF_NAME 分支提交后自动构建。
+
+          - 版本：$env:RELEASE_VERSION
+          - 构建时间（UTC+8）：$env:BUILT_AT
+          - 提交：$env:GITHUB_SHA
+          - 平台：Windows x64
+
+          下载 ZIP 发布包，并使用同名 .sha256 文件核对完整性。
+          "@ | Set-Content -LiteralPath $notesFile -Encoding utf8
+
+          $arguments = @(
+            "release", "create", $env:RELEASE_TAG,
+            $env:ARCHIVE, $env:CHECKSUM,
+            "--repo", $env:GITHUB_REPOSITORY,
+            "--target", $env:GITHUB_SHA,
+            "--title", "HD2 Armor Desk $env:RELEASE_VERSION",
+            "--notes-file", $notesFile,
+            "--latest",
+            "--fail-on-no-commits"
+          )
+          & gh @arguments
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub release creation failed with exit code $LASTEXITCODE"
+          }

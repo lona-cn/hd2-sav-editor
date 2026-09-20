@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HD2 Armor Desk equipment catalog v2 (proposed handoff contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "game",
+    "updated_at",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "game": {
+      "const": "helldivers2"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "item_key",
+          "id_u32",
+          "item_type",
+          "display_name",
+          "classification",
+          "observations"
+        ],
+        "properties": {
+          "item_key": {
+            "type": "string",
+            "pattern": "^(armor|helmet|cape|unknown):0x[0-9A-F]{8}$"
+          },
+          "id_u32": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "item_type": {
+            "enum": [
+              "armor",
+              "helmet",
+              "cape",
+              "unknown"
+            ]
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "maxItems": 64
+          },
+          "classification": {
+            "enum": [
+              "user_verified",
+              "seed_user_verified",
+              "inferred_from_body_observation",
+              "imported_metadata",
+              "unknown"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "weight_class": {
+                "enum": [
+                  "light",
+                  "medium",
+                  "heavy",
+                  null
+                ]
+              },
+              "passive_tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "maxItems": 32
+              },
+              "warbond": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 512
+              },
+              "image_path": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 1024
+              }
+            }
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "observed_offset",
+                "observed_slot",
+                "source_format"
+              ],
+              "properties": {
+                "observed_offset": {
+                  "type": "integer",
+                  "minimum": 16,
+                  "maximum": 16777212
+                },
+                "observed_slot": {
+                  "enum": [
+                    "head",
+                    "body",
+                    "cape",
+                    "unknown"
+                  ]
+                },
+                "first_seen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_seen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "count": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "source_digest": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[0-9a-fA-F]{64}$"
+                },
+                "source_format": {
+                  "enum": [
+                    "legacy_json",
+                    "legacy_csv",
+                    "live_capture",
+                    "user_manual",
+                    "catalog_v2"
+                  ]
+                }
+              }
+            },
+            "maxItems": 100000
+          }
+        }
+      },
+      "maxItems": 100000
+    }
+  },
+  "$comment": "Semantic validation also required: item_key matches type and numeric ID, duplicate/ambiguous IDs resolved, image paths local and safe. JSON Schema alone is insufficient."
+}

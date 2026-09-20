@@ -1,0 +1,16 @@
+[package]
+name = "sav_codec"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Strict bounded codec for the observed HD2 testament_new.sav container"
+
+[dependencies]
+lz4_flex.workspace = true
+crc32fast.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+sha2.workspace = true

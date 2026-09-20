@@ -1,0 +1,26 @@
+[package]
+name = "local_io"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Local file monitoring, catalog store, save transactions and Windows file identity"
+
+[dependencies]
+sav_codec.workspace = true
+loadout_domain.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3.20.0"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59.0", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Threading",
+] }

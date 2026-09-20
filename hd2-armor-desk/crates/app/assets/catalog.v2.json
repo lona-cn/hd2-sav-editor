@@ -1,0 +1,2005 @@
+{
+  "schema_version": 2,
+  "game": "helldivers2",
+  "updated_at": "2026-09-19T06:26:00.272+00:00",
+  "items": [
+    {
+      "item_key": "armor:0x01C2A674",
+      "id_u32": 29533812,
+      "item_type": "armor",
+      "display_name": "AD-26 血刃科技",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:15:59.583+00:00",
+          "last_seen": "2026-09-19T06:15:59.583+00:00",
+          "count": 1,
+          "source_digest": "93a6e00c625d30d57e4ffed632713cf0b4272645cfd3f2d717483e5300527eb3",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x05E56EE5",
+      "id_u32": 98922213,
+      "item_type": "armor",
+      "display_name": "SR-24 街头侦察兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:08:00.373+00:00",
+          "last_seen": "2026-09-19T06:08:00.373+00:00",
+          "count": 1,
+          "source_digest": "a42549c576eaffd040ad31f66b74864ab2ec7b9d070b30e6fd7f19ae0b75f6c4",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x09B08EC4",
+      "id_u32": 162565828,
+      "item_type": "armor",
+      "display_name": "BP-32 杰克军靴",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:08:38.439+00:00",
+          "last_seen": "2026-09-19T06:08:38.439+00:00",
+          "count": 1,
+          "source_digest": "8a9993b0b9eaadeb8f09802e559e1d5a69adcec401f6e277235b5f75061067ee",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x0A18C237",
+      "id_u32": 169394743,
+      "item_type": "armor",
+      "display_name": "AD-49 阿波罗神",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:42.887+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 3,
+          "source_digest": "0f2e81e0c54805ffddab714951c1007c9b68e89ca325ca57de98077ffca222a4",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x0ADE6719",
+      "id_u32": 182347545,
+      "item_type": "armor",
+      "display_name": "DS-191 天蝎",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:16:27.591+00:00",
+          "count": 2,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x0B5CD386",
+      "id_u32": 190632838,
+      "item_type": "armor",
+      "display_name": "CW-36 冬日战兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:20:17.602+00:00",
+          "last_seen": "2026-09-19T06:20:17.602+00:00",
+          "count": 1,
+          "source_digest": "a8360a3b2ae30173bc4e2d54dfae3485b28efa225622e9c30060737d7a3b8aef",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x0C65CF53",
+      "id_u32": 207998803,
+      "item_type": "unknown",
+      "display_name": "P-92 法令",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:16:26.052+00:00",
+          "last_seen": "2026-09-18T17:16:54.533+00:00",
+          "count": 2,
+          "source_digest": "bd9ed92a76c18369f80597da698ebda50ccf80fd49d86cf76b2003124534305a",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x16E1B9D3",
+      "id_u32": 383891923,
+      "item_type": "armor",
+      "display_name": "A-9 地狱伞兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:12:53.001+00:00",
+          "last_seen": "2026-09-19T06:13:12.781+00:00",
+          "count": 2,
+          "source_digest": "9f35e59642b26afed59e5e1f9bfc43d70c700d3840e9c0a9daed455f71bdd3b0",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x16EEB860",
+      "id_u32": 384743520,
+      "item_type": "armor",
+      "display_name": "GS-17 边境统帅",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:15:34.700+00:00",
+          "last_seen": "2026-09-19T06:15:34.700+00:00",
+          "count": 1,
+          "source_digest": "b157a0fff0af01cc393bf51cba97dfbca87c0f25a824abc0dce7f0749d46495a",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x1A96CE6B",
+      "id_u32": 446090859,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 313,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x1C089A28",
+      "id_u32": 470325800,
+      "item_type": "armor",
+      "display_name": "TR-40 金鹰",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:13:32.675+00:00",
+          "last_seen": "2026-09-19T06:13:32.675+00:00",
+          "count": 1,
+          "source_digest": "680768b173c084c3ece6fdbd677e37500e4fcd683c3dd21995e09b761c18ab76",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x1C6C05FA",
+      "id_u32": 476841466,
+      "item_type": "armor",
+      "display_name": "CM-09 碎骨杀手",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:11:09.851+00:00",
+          "last_seen": "2026-09-19T06:11:09.851+00:00",
+          "count": 1,
+          "source_digest": "5a28c12c525a9f5e638610e64cd6033b62ad04ecc0aaa49b783af810a6a3a5ff",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x1D20D6EE",
+      "id_u32": 488691438,
+      "item_type": "armor",
+      "display_name": "B-08 轻装枪手",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:08:43.710+00:00",
+          "last_seen": "2026-09-18T17:08:43.710+00:00",
+          "count": 1,
+          "source_digest": "ac70f77aea3e942e0ab41447be6345dbec20e3de71fd23e8c70d0ba1bd460f40",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x1D60FC90",
+      "id_u32": 492895376,
+      "item_type": "armor",
+      "display_name": "SC-30 开路侦察兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:09:04.960+00:00",
+          "last_seen": "2026-09-18T17:09:04.960+00:00",
+          "count": 1,
+          "source_digest": "8a762f877f65f888f179f66c91fb53c6b609e9da1f45c757a04187c964bc87ce",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x223A3B4B",
+      "id_u32": 574241611,
+      "item_type": "armor",
+      "display_name": "I-44 火蜥",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:00.630+00:00",
+          "last_seen": "2026-09-19T06:18:00.630+00:00",
+          "count": 1,
+          "source_digest": "d024207d524b6ad9e1f1bbfb091d939ea3b332cd5880a1068dd63378226629b1",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x24E3D6BA",
+      "id_u32": 618911418,
+      "item_type": "armor",
+      "display_name": "EX-03 原型3",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:11:36.393+00:00",
+          "last_seen": "2026-09-19T06:11:36.393+00:00",
+          "count": 1,
+          "source_digest": "2276d83ea55561979a6b7cf96d484a23fb351cf36e1d655f0899b6eaafbb115d",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "helmet:0x261C4A52",
+      "id_u32": 639388242,
+      "item_type": "helmet",
+      "display_name": "B-01 战术（头盔）",
+      "aliases": [],
+      "classification": "seed_user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-18T17:24:21.545+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 78,
+          "source_digest": "a9e0f329295db63e304a8b01a1168ae3cf16f1e2f3d9235769b254466067c594",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x26BF31FE",
+      "id_u32": 650064382,
+      "item_type": "armor",
+      "display_name": "CE-74 破裂者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:07:11.343+00:00",
+          "last_seen": "2026-09-18T17:07:11.343+00:00",
+          "count": 1,
+          "source_digest": "df48ef5e2f6771cc59eef61290f28f0f3d1d3109a1ec22ce226227e5eb2960c2",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x26D572A4",
+      "id_u32": 651522724,
+      "item_type": "armor",
+      "display_name": "FS-23 战斗大师",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:20:05.383+00:00",
+          "last_seen": "2026-09-19T06:20:05.383+00:00",
+          "count": 1,
+          "source_digest": "f4d09f229a54c1e01e22adcf9799cec10a3ed52923828e8cb8a474ce1ab6cab2",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x289884F4",
+      "id_u32": 681084148,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-18T17:21:04.555+00:00",
+          "last_seen": "2026-09-18T17:22:52.885+00:00",
+          "count": 3,
+          "source_digest": "e70d84d16ba58fa2a176cb8af6675bed7c4617a92b041055c2ec4f964cec3c98",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x2D1DD830",
+      "id_u32": 756930608,
+      "item_type": "armor",
+      "display_name": "I-09 热力追踪",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:09:22.746+00:00",
+          "last_seen": "2026-09-19T06:09:22.746+00:00",
+          "count": 1,
+          "source_digest": "87e04129fc3b55973508625fe9adf16835dfaa86cd93b3854bd16978de0c6852",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x2E2E6FD8",
+      "id_u32": 774795224,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 37,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x2E706DB8",
+      "id_u32": 779120056,
+      "item_type": "armor",
+      "display_name": "",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:19:38.391+00:00",
+          "last_seen": "2026-09-19T06:19:38.391+00:00",
+          "count": 1,
+          "source_digest": "93aa7b65bb9a2de257a756a6bf5aadb1f1020a1ba7aae46674a7751fe8f2e14e",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x30E54B57",
+      "id_u32": 820333399,
+      "item_type": "armor",
+      "display_name": "RE-2310 荣誉卫队",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:15:45.853+00:00",
+          "last_seen": "2026-09-19T06:15:45.853+00:00",
+          "count": 1,
+          "source_digest": "169df1314f873c592e9ec826e531a7e0d4379ac3044a167083abd14f333689db",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x314173DE",
+      "id_u32": 826373086,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 285,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-18T17:21:04.555+00:00",
+          "count": 35,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x32EF9AB3",
+      "id_u32": 854563507,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 45,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x335B8A1A",
+      "id_u32": 861637146,
+      "item_type": "unknown",
+      "display_name": "GP-20 最后通牒",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-18T17:13:19.554+00:00",
+          "count": 13,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x372EBAC6",
+      "id_u32": 925809350,
+      "item_type": "unknown",
+      "display_name": "PLAS-1 焦土",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 17,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:11:37.713+00:00",
+          "last_seen": "2026-09-18T17:11:37.713+00:00",
+          "count": 1,
+          "source_digest": "75cbb5d29d89791ddd23e454de5ae82a12ebe7f4c7072d4dc50445becc94a622",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x38AA207D",
+      "id_u32": 950673533,
+      "item_type": "armor",
+      "display_name": "CM-14 医师",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:12:24.614+00:00",
+          "last_seen": "2026-09-19T06:12:24.614+00:00",
+          "count": 1,
+          "source_digest": "dc8670a3a53ef4f1730463f7f7e9c15f1b9f898244fd253d31fa6cc189904c61",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x39D7E6A4",
+      "id_u32": 970450596,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 53,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x3C3EBAF0",
+      "id_u32": 1010744048,
+      "item_type": "armor",
+      "display_name": "SA-32 精力充沛",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:17:31.654+00:00",
+          "last_seen": "2026-09-19T06:17:31.654+00:00",
+          "count": 1,
+          "source_digest": "931c39de2b81becd3f07a458f096191a7fa7191ed47875297801ffc3ebb32372",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x3F1BEC1A",
+      "id_u32": 1058794522,
+      "item_type": "armor",
+      "display_name": "DP-00 战术",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:10:33.683+00:00",
+          "last_seen": "2026-09-19T06:10:33.683+00:00",
+          "count": 1,
+          "source_digest": "0f86db8e3f322c4f2a102327c6aa86d032d759530e6264eaf94cf3d5b8da2be7",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x40C6635C",
+      "id_u32": 1086743388,
+      "item_type": "armor",
+      "display_name": "BP-20 思想矫正官",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:16:15.368+00:00",
+          "last_seen": "2026-09-19T06:16:15.368+00:00",
+          "count": 1,
+          "source_digest": "db3ec9024507bfbf850d0f715e0c6a5884dd46f4592837d20d5ee5181f7a053e",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x4A545F06",
+      "id_u32": 1247043334,
+      "item_type": "armor",
+      "display_name": "DS-42 联邦之刃",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:51.616+00:00",
+          "last_seen": "2026-09-19T06:18:51.616+00:00",
+          "count": 1,
+          "source_digest": "04bf08ddafbcee8ec689c0ec6e8e2fb2f8a96036c935326fda64f4c9b67e6b81",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x4AD84EEA",
+      "id_u32": 1255689962,
+      "item_type": "unknown",
+      "display_name": "G-4 毒气手雷",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 25,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:16:03.224+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 93,
+          "source_digest": "1a0af55f526092296a580f0e5e63d552ac770d980170f22a40e71028b716850e",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x4F7FB2BD",
+      "id_u32": 1333768893,
+      "item_type": "armor",
+      "display_name": "B-01 战术2",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:13:19.903+00:00",
+          "last_seen": "2026-09-19T06:13:55.948+00:00",
+          "count": 2,
+          "source_digest": "1c5f6c704d13a5c6d40fb4b53ceca05067c0b6936afb4d725700f7be379e5b6f",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x51E62268",
+      "id_u32": 1374036584,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:18:55.957+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 89,
+          "source_digest": "8c8c0befc9fd4e4c738572030058b088651776ac4ae7d8c0de825a73fbbc1850",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "cape:0x53B64BF8",
+      "id_u32": 1404455928,
+      "item_type": "cape",
+      "display_name": "",
+      "aliases": [],
+      "classification": "inferred_from_body_observation",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 293,
+          "observed_slot": "cape",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-18T17:20:17.787+00:00",
+          "count": 33,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x5497818F",
+      "id_u32": 1419215247,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 309,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x55FD699B",
+      "id_u32": 1442671003,
+      "item_type": "armor",
+      "display_name": "AC-2 服从指挥",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:09:32.862+00:00",
+          "last_seen": "2026-09-19T06:09:32.862+00:00",
+          "count": 1,
+          "source_digest": "1fd095603a4ed36a373ad44cb324cc14db4f90460dbdc43a5e67bd89f4b34822",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x5662C173",
+      "id_u32": 1449312627,
+      "item_type": "armor",
+      "display_name": "I-102 龙行者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:16:46.401+00:00",
+          "last_seen": "2026-09-19T06:17:08.213+00:00",
+          "count": 2,
+          "source_digest": "845efb78c4501321bf8c98cae13d28d3f4c66ddca1d0b2202f58480968573111",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x5A17D6D6",
+      "id_u32": 1511511766,
+      "item_type": "armor",
+      "display_name": "CE-07 拆除专家",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:07:55.976+00:00",
+          "last_seen": "2026-09-18T17:07:55.976+00:00",
+          "count": 1,
+          "source_digest": "e4c9adddf7bcb16420307576cd343d34a624e7e5549865965f10f550edc28d47",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x5BB4BBB0",
+      "id_u32": 1538571184,
+      "item_type": "armor",
+      "display_name": "SC-34 深入敌阵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:09:23.162+00:00",
+          "last_seen": "2026-09-19T06:07:10.163+00:00",
+          "count": 22,
+          "source_digest": "278bd27cf74c7ff56f69378ebed71936022e06fa5dd76fbef5b05464a3f250aa",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x5CC09255",
+      "id_u32": 1556124245,
+      "item_type": "armor",
+      "display_name": "AF-50 毒瘴游骑兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:07:14.747+00:00",
+          "last_seen": "2026-09-19T06:07:14.747+00:00",
+          "count": 1,
+          "source_digest": "9eecea3f86b8dfd1182e1be5310ede24e96cf06ce199d5cecfc8e6154b431f7a",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x5D0D8002",
+      "id_u32": 1561165826,
+      "item_type": "armor",
+      "display_name": "TG-8 神枪手",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:16:55.544+00:00",
+          "last_seen": "2026-09-19T06:17:11.295+00:00",
+          "count": 2,
+          "source_digest": "bad4b56da2be5d3e51409494fc126892db5b6875b54a7bb36c34f3bc244f8a1f",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x61B31723",
+      "id_u32": 1639126819,
+      "item_type": "armor",
+      "display_name": "B-01 战术（身体护甲）",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:20:12.702+00:00",
+          "last_seen": "2026-09-19T06:13:52.887+00:00",
+          "count": 16,
+          "source_digest": "5003a1f330c7d12ad1bfd8bf8af3894a216a1b1032eedee5a28a81209d129dcd",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x6351A9AA",
+      "id_u32": 1666296234,
+      "item_type": "armor",
+      "display_name": "B-01 战术3",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:13:27.049+00:00",
+          "last_seen": "2026-09-19T06:14:22.376+00:00",
+          "count": 2,
+          "source_digest": "1338ec76877d4fbf81579950be0e32af871be3f7663c48545f74fc34387e7685",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x69BC2D4A",
+      "id_u32": 1773940042,
+      "item_type": "armor",
+      "display_name": "CW-22 科迪亚克",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:17:18.942+00:00",
+          "last_seen": "2026-09-19T06:17:18.942+00:00",
+          "count": 1,
+          "source_digest": "f96f28359a8d28654a39c6579eab96061d254a42173bcb999285bfd1ffd1f92c",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x6D30F386",
+      "id_u32": 1831924614,
+      "item_type": "armor",
+      "display_name": "B-01 战术4",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:14:29.985+00:00",
+          "last_seen": "2026-09-19T06:14:29.985+00:00",
+          "count": 1,
+          "source_digest": "e22f84619dfe1c30859b0c02c49fa680caf497c13eefa00cbdcba7ad15e8e465",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "cape:0x6E72F493",
+      "id_u32": 1853027475,
+      "item_type": "cape",
+      "display_name": "",
+      "aliases": [],
+      "classification": "inferred_from_body_observation",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 293,
+          "observed_slot": "cape",
+          "first_seen": "2026-09-18T17:20:55.920+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 83,
+          "source_digest": "b5283e723126ef605ae173e0e349ca38ceddc836e64703ed0c9c7e7e44b1b562",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x7168A1D2",
+      "id_u32": 1902682578,
+      "item_type": "unknown",
+      "display_name": "PLAS-15 忠诚者",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:09:49.018+00:00",
+          "last_seen": "2026-09-18T17:09:49.018+00:00",
+          "count": 1,
+          "source_digest": "d064e20295c470788de237ad977b0c658a0e16e51f19df72b53c58997b7075bb",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x71B6D7DA",
+      "id_u32": 1907808218,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 29,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x71BCCD81",
+      "id_u32": 1908198785,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 301,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x72B472A7",
+      "id_u32": 1924428455,
+      "item_type": "armor",
+      "display_name": "PH-9 掠食者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:09:09.485+00:00",
+          "last_seen": "2026-09-19T06:09:09.485+00:00",
+          "count": 1,
+          "source_digest": "259d106454232baee22243a72b1121af15ac488a0e20dbda5dcab6f756428202",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x7EDF6505",
+      "id_u32": 2128569605,
+      "item_type": "armor",
+      "display_name": "CE-27 裂地者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:11:00.141+00:00",
+          "last_seen": "2026-09-19T06:11:00.141+00:00",
+          "count": 1,
+          "source_digest": "c59bd125f90e20706d618ddc75d1fec605a6819f52df0746b926468d34ca7679",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0x94AEBD36",
+      "id_u32": 2494479670,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 321,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x9F73133E",
+      "id_u32": 2675118910,
+      "item_type": "armor",
+      "display_name": "TR-117 阿尔法指挥官",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:12:41.360+00:00",
+          "last_seen": "2026-09-19T06:12:41.360+00:00",
+          "count": 1,
+          "source_digest": "deb556d27d4083aab471b9bc414bcc99a4544b24f2350d313c0ac1136ecaca89",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x9FA96490",
+      "id_u32": 2678678672,
+      "item_type": "armor",
+      "display_name": "IE-12 义士",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:15:23.536+00:00",
+          "last_seen": "2026-09-19T06:15:23.536+00:00",
+          "count": 1,
+          "source_digest": "c09f4bdc530b7d3224c3fbe3b69c575f381b285e0ec11dd4411e1a66577ae48e",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xA45385CD",
+      "id_u32": 2756937165,
+      "item_type": "armor",
+      "display_name": "TG-112爆破兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:19:49.061+00:00",
+          "last_seen": "2026-09-19T06:20:45.080+00:00",
+          "count": 2,
+          "source_digest": "742e86428b2c4963a8cd1c3c17706aaa518197fb93e3dad8bad3d21c7bf48598",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0xA7977F98",
+      "id_u32": 2811723672,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:15:26.156+00:00",
+          "last_seen": "2026-09-18T17:18:52.386+00:00",
+          "count": 9,
+          "source_digest": "62b24c7d342b73ef5d5c0cec5175b78630a1bd4336b5ffda63a22acdd463f747",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xAA32B384",
+      "id_u32": 2855449476,
+      "item_type": "armor",
+      "display_name": "EX-16 原型16",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:11:50.590+00:00",
+          "last_seen": "2026-09-19T06:11:50.590+00:00",
+          "count": 1,
+          "source_digest": "378dd27b78e8024595379fea59442d428504f16f4c1014385916d75bc6c780f3",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xAB1B4972",
+      "id_u32": 2870692210,
+      "item_type": "armor",
+      "display_name": "LAS-13 三叉戟",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 17,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 115,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 21,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:14:48.855+00:00",
+          "last_seen": "2026-09-18T17:17:30.443+00:00",
+          "count": 2,
+          "source_digest": "94b2bdd8dbe5922fbeb47703198594cff12d948fa58941121efd1bf8d1f35481",
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 25,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:17:30.443+00:00",
+          "last_seen": "2026-09-18T17:17:30.443+00:00",
+          "count": 1,
+          "source_digest": "8ad80a3430b0e0d8c97000eed00daebacf9ebb1ac256c3f90c6513e513e224f7",
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:19:37.958+00:00",
+          "last_seen": "2026-09-18T17:19:37.958+00:00",
+          "count": 1,
+          "source_digest": "00a5f560ad574c2173e3b826810840c8b7a1a340cb0c11777676079bcaf4a588",
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-18T17:23:39.586+00:00",
+          "last_seen": "2026-09-18T17:23:39.586+00:00",
+          "count": 1,
+          "source_digest": "1a8179c24d20b260faa9c9d89ef409b85211d48e8c1b28b272936e95eeb79873",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xAE5978B1",
+      "id_u32": 2925099185,
+      "item_type": "armor",
+      "display_name": "KDM-500 先驱骑兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:11.357+00:00",
+          "last_seen": "2026-09-19T06:18:11.357+00:00",
+          "count": 1,
+          "source_digest": "433091ef14c2ed23a7d8a4bc355b228bb5accffc9cd85230c6452717f4db1299",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB028B970",
+      "id_u32": 2955458928,
+      "item_type": "armor",
+      "display_name": "IE-3 烈士",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:15:11.246+00:00",
+          "last_seen": "2026-09-19T06:15:11.246+00:00",
+          "count": 1,
+          "source_digest": "952557b0e5c12caa694e65966e0c42cfacbfcfb2be5497bbccd9fea1c1457103",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB3550D20",
+      "id_u32": 3008695584,
+      "item_type": "armor",
+      "display_name": "UF-50 猎犬",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:14:58.011+00:00",
+          "last_seen": "2026-09-19T06:14:58.011+00:00",
+          "count": 1,
+          "source_digest": "d830a1d561b11530144a082f19de9fc8a490f351c0f6adae2803ce35759a7cb6",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB482B460",
+      "id_u32": 3028464736,
+      "item_type": "armor",
+      "display_name": "GS-66 立法者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:33.234+00:00",
+          "last_seen": "2026-09-19T06:18:33.234+00:00",
+          "count": 1,
+          "source_digest": "5ed4c833d44720336985aaa68325111df810a960efb951023d6869834d365f17",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB513FD54",
+      "id_u32": 3037986132,
+      "item_type": "armor",
+      "display_name": "DP-40 联邦英雄",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:12:03.248+00:00",
+          "last_seen": "2026-09-19T06:12:03.248+00:00",
+          "count": 1,
+          "source_digest": "6537f3e6dcda49293b4708cee3e32c0472403a473bf5bdf9f1b58eeb08a120d2",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB661572A",
+      "id_u32": 3059832618,
+      "item_type": "armor",
+      "display_name": "UF-16 督察员",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:07:42.158+00:00",
+          "last_seen": "2026-09-19T06:07:42.158+00:00",
+          "count": 1,
+          "source_digest": "996ad63d96e5228b5d3d1adb82d068565234c5ddaef5bcd6511d1fd9dcf3bd0b",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB69DF10D",
+      "id_u32": 3063804173,
+      "item_type": "armor",
+      "display_name": "SA-8 蛮悍",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:19:15.466+00:00",
+          "last_seen": "2026-09-19T06:19:15.466+00:00",
+          "count": 1,
+          "source_digest": "a55c915f93eba1878c6cc7d1fa0a916574d54a9e90495a02f4a84505aac9081f",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xB92E1781",
+      "id_u32": 3106805633,
+      "item_type": "armor",
+      "display_name": "CW-4 极地游骑兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:05:30.298+00:00",
+          "last_seen": "2026-09-18T17:06:53.580+00:00",
+          "count": 2,
+          "source_digest": "5d60609d9be682ab12297b7be1e30dbba55c9c3c5e0e8c79e26f983799886bd2",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0xBE376EA8",
+      "id_u32": 3191303848,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 25,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:18:05.025+00:00",
+          "last_seen": "2026-09-18T17:18:29.953+00:00",
+          "count": 3,
+          "source_digest": "89995abd4e2c97da4accdb2308fb9452c21ca066f982e9cc5c28f47a477c6acc",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xC71DBBA4",
+      "id_u32": 3340614564,
+      "item_type": "armor",
+      "display_name": "RE-1861 阅兵指挥官",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:08:16.106+00:00",
+          "last_seen": "2026-09-19T06:08:16.106+00:00",
+          "count": 1,
+          "source_digest": "73b9627a2a2ae5f49a1a702a7dbc59a12de875d483775fe7b28d5948b49abf34",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xC7A5782F",
+      "id_u32": 3349510191,
+      "item_type": "armor",
+      "display_name": "SA-7 冲锋者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:16:38.280+00:00",
+          "last_seen": "2026-09-19T06:16:38.280+00:00",
+          "count": 1,
+          "source_digest": "66049f3b8e7de0128a889016806c2582095bfa7b1233a49b5e60d231f49b3093",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xC9D2AD39",
+      "id_u32": 3386027321,
+      "item_type": "armor",
+      "display_name": "SA-04 技术兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:14:37.123+00:00",
+          "last_seen": "2026-09-19T06:14:37.123+00:00",
+          "count": 1,
+          "source_digest": "6ada4acf76607d55c336395977dd2b3dffa4ee2a077e4dce183c6cac7ccae3c7",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xCB7E9736",
+      "id_u32": 3414071094,
+      "item_type": "armor",
+      "display_name": "B-22 模范公民",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:11:23.163+00:00",
+          "last_seen": "2026-09-19T06:11:47.012+00:00",
+          "count": 2,
+          "source_digest": "9dec479729fb9d54213f1fd3db8e7771d22b7720629ef44355a475d3494b852d",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xD2C578E1",
+      "id_u32": 3536156897,
+      "item_type": "armor",
+      "display_name": "B-27 强化突击兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:17:39.815+00:00",
+          "last_seen": "2026-09-19T06:17:39.815+00:00",
+          "count": 1,
+          "source_digest": "abfb5c0527e407bb0aa694eff8d3648f96fa0c0173ed3ad32e4cd80c2581de59",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xD3461392",
+      "id_u32": 3544585106,
+      "item_type": "armor",
+      "display_name": "FS-55 蹂躏者（身体护甲）",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-18T17:20:55.920+00:00",
+          "count": 34,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:17:14.346+00:00",
+          "last_seen": "2026-09-19T06:17:14.346+00:00",
+          "count": 1,
+          "source_digest": "82c13adf51541351be0d1f4517eb5dd22aed7db8298ba4a244b39d16299050ba",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xD63FFDD3",
+      "id_u32": 3594517971,
+      "item_type": "armor",
+      "display_name": "SR-18 路障",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:18:24.590+00:00",
+          "last_seen": "2026-09-19T06:18:24.590+00:00",
+          "count": 1,
+          "source_digest": "f4a8515890a2040c8b8594b3861c0a00e1b08e8049458cdf34ebc977e8f61df9",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xD7B2FD5D",
+      "id_u32": 3618831709,
+      "item_type": "armor",
+      "display_name": "EX-00 原型X",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-18T17:08:11.749+00:00",
+          "last_seen": "2026-09-18T17:08:11.749+00:00",
+          "count": 1,
+          "source_digest": "7b18c93bcfa48ce721bef7dfce87aa2dc0a807ea47802e3862fdd98429a0dbde",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xD879973A",
+      "id_u32": 3631847226,
+      "item_type": "armor",
+      "display_name": "A-35 侦察者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:13:03.124+00:00",
+          "last_seen": "2026-09-19T06:13:03.124+00:00",
+          "count": 1,
+          "source_digest": "cdfa08e692fbb32b6dabd117614c91cfb7ebb062d920e46bf0b532e7f15d4520",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xDAE4A744",
+      "id_u32": 3672418116,
+      "item_type": "armor",
+      "display_name": "SA-25 钢铁士兵",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:10:08.799+00:00",
+          "last_seen": "2026-09-19T06:10:08.799+00:00",
+          "count": 1,
+          "source_digest": "3e3e5864fc11219d2ea846abd6ed24f14c5f2d97abeaf729c80afb626c6cee2d",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0xDB990E0A",
+      "id_u32": 3684240906,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 285,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:21:36.684+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 81,
+          "source_digest": "341db2bee0707b5b3b493f06300589c7bde0cec548f4dcd4e7f126f974ae2513",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xDBC21A99",
+      "id_u32": 3686931097,
+      "item_type": "armor",
+      "display_name": "RS-40 掠食猛兽",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:19:02.792+00:00",
+          "last_seen": "2026-09-19T06:19:02.792+00:00",
+          "count": 1,
+          "source_digest": "1fc1b9920447a73a3edc6d7515bd725602540ea10375311dc2a397c64feddb46",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xDE631A28",
+      "id_u32": 3731036712,
+      "item_type": "armor",
+      "display_name": "O-2 重装操作者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:19:28.676+00:00",
+          "last_seen": "2026-09-19T06:19:28.676+00:00",
+          "count": 1,
+          "source_digest": "a48520111edb31c2ea3ca2331e6ca0cd813cf3f18f8151e0a5b6f57f1e0201c9",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xE3AAA79D",
+      "id_u32": 3819612061,
+      "item_type": "armor",
+      "display_name": "DP-11 人民捍卫者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:12:12.377+00:00",
+          "last_seen": "2026-09-19T06:12:12.377+00:00",
+          "count": 1,
+          "source_digest": "224f99e308b62f10e5463f5f56632123638c1198a5edad3ccecf8efcb703d239",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0xE6A4960D",
+      "id_u32": 3869545997,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 25,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-18T17:15:37.878+00:00",
+          "count": 19,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xE9ADD047",
+      "id_u32": 3920482375,
+      "item_type": "armor",
+      "display_name": "AF-02 危害大师",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:14:48.821+00:00",
+          "last_seen": "2026-09-19T06:14:48.821+00:00",
+          "count": 1,
+          "source_digest": "c225dc7d7b4a384f9eb75efc921bfbf639e0e827a547e054cc7dc10166a75e19",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xEC4638AF",
+      "id_u32": 3964025007,
+      "item_type": "armor",
+      "display_name": "RS-20 绞杀者",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:08:57.735+00:00",
+          "last_seen": "2026-09-19T06:08:57.735+00:00",
+          "count": 1,
+          "source_digest": "360859a98ecae23050fd3a058a700c26ed46d12e30870335cb0b354516ed544a",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xECABADBF",
+      "id_u32": 3970674111,
+      "item_type": "armor",
+      "display_name": "FS-05 神射手",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:17:49.452+00:00",
+          "last_seen": "2026-09-19T06:17:49.452+00:00",
+          "count": 1,
+          "source_digest": "395dc6269b6c340a7fae1701c13be43e899c0788d78b74af4f2ded57a66e08eb",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "unknown:0xEF050987",
+      "id_u32": 4010084743,
+      "item_type": "unknown",
+      "display_name": "",
+      "aliases": [],
+      "classification": "unknown",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 305,
+          "observed_slot": "unknown",
+          "first_seen": "2026-09-18T17:03:30.869+00:00",
+          "last_seen": "2026-09-19T06:26:00.272+00:00",
+          "count": 116,
+          "source_digest": "6c2e818488a133966d647468e270d8bcdf0c1d40e2f2fe6e9387b379e75e7356",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xF2B7D3F5",
+      "id_u32": 4072133621,
+      "item_type": "armor",
+      "display_name": "SA-12 伺服辅助",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:10:24.001+00:00",
+          "last_seen": "2026-09-19T06:10:24.001+00:00",
+          "count": 1,
+          "source_digest": "2d8b9ab1fd9ff11fe4dea195416248d2615abd4bff72e29f8017202f4a5577ca",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xF7E6F127",
+      "id_u32": 4159107367,
+      "item_type": "armor",
+      "display_name": "O-3 自由之魂",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:09:49.046+00:00",
+          "last_seen": "2026-09-19T06:09:49.046+00:00",
+          "count": 1,
+          "source_digest": "f4bcad77f69a6efa79118353a642858a8b741efb84e1122c8fa00dffcbf36e70",
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0xFB4B1254",
+      "id_u32": 4216001108,
+      "item_type": "armor",
+      "display_name": "CE-35 战壕工程师",
+      "aliases": [],
+      "classification": "user_verified",
+      "favorite": false,
+      "metadata": {},
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T06:10:49.942+00:00",
+          "last_seen": "2026-09-19T06:10:49.942+00:00",
+          "count": 1,
+          "source_digest": "e9a2a52f62e848a4f01705aa9c885fce7143831c5629c23db8b120614f2b58b8",
+          "source_format": "legacy_json"
+        }
+      ]
+    }
+  ]
+}

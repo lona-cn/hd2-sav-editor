@@ -1,0 +1,119 @@
+{
+  "schema_version": 2,
+  "game": "helldivers2",
+  "updated_at": "2026-09-19T00:00:00Z",
+  "items": [
+    {
+      "item_key": "armor:0xD3461392",
+      "id_u32": 3544585106,
+      "item_type": "armor",
+      "display_name": "FS-55 蹂躏者",
+      "aliases": [],
+      "classification": "seed_user_verified",
+      "note": "最小演示条目；未包含用户全量ID",
+      "favorite": false,
+      "metadata": {
+        "weight_class": null,
+        "passive_tags": [],
+        "warbond": null,
+        "image_path": null
+      },
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T00:00:00Z",
+          "last_seen": "2026-09-19T00:00:01Z",
+          "count": 2,
+          "source_format": "legacy_json"
+        },
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-19T00:00:00Z",
+          "last_seen": "2026-09-19T00:00:01Z",
+          "count": 2,
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "helmet:0x056848E9",
+      "id_u32": 90720489,
+      "item_type": "helmet",
+      "display_name": "FS-55 蹂躏者",
+      "aliases": [],
+      "classification": "seed_user_verified",
+      "note": "最小演示条目；未包含用户全量ID",
+      "favorite": false,
+      "metadata": {
+        "weight_class": null,
+        "passive_tags": [],
+        "warbond": null,
+        "image_path": null
+      },
+      "observations": [
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-19T00:00:00Z",
+          "last_seen": "2026-09-19T00:00:01Z",
+          "count": 2,
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "armor:0x61B31723",
+      "id_u32": 1639126819,
+      "item_type": "armor",
+      "display_name": "B-01 战术",
+      "aliases": [],
+      "classification": "seed_user_verified",
+      "note": "最小演示条目；未包含用户全量ID",
+      "favorite": false,
+      "metadata": {
+        "weight_class": null,
+        "passive_tags": [],
+        "warbond": null,
+        "image_path": null
+      },
+      "observations": [
+        {
+          "observed_offset": 297,
+          "observed_slot": "body",
+          "first_seen": "2026-09-19T00:00:00Z",
+          "last_seen": "2026-09-19T00:00:01Z",
+          "count": 2,
+          "source_format": "legacy_json"
+        }
+      ]
+    },
+    {
+      "item_key": "helmet:0x261C4A52",
+      "id_u32": 639388242,
+      "item_type": "helmet",
+      "display_name": "B-01 战术",
+      "aliases": [],
+      "classification": "seed_user_verified",
+      "note": "最小演示条目；未包含用户全量ID",
+      "favorite": false,
+      "metadata": {
+        "weight_class": null,
+        "passive_tags": [],
+        "warbond": null,
+        "image_path": null
+      },
+      "observations": [
+        {
+          "observed_offset": 289,
+          "observed_slot": "head",
+          "first_seen": "2026-09-19T00:00:00Z",
+          "last_seen": "2026-09-19T00:00:01Z",
+          "count": 2,
+          "source_format": "legacy_json"
+        }
+      ]
+    }
+  ]
+}

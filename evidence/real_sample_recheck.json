@@ -1,0 +1,40 @@
+{
+  "run_date": "2026-09-19",
+  "environment": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "scope": "Offline read, noop and edit roundtrip only; no Windows game",
+  "samples": [
+    {
+      "sample_label": "testament_new.sav",
+      "raw_bytes": 7040,
+      "payload_bytes": 572088,
+      "header": "060100003eeacea6b8ba0800",
+      "inner_low32": "0x657DC575",
+      "outer_crc32": "0x7BB49FA2",
+      "head": "0xC1611AC9",
+      "body": "0xD3461392",
+      "cape": "0x53B64BF8",
+      "known_layout": true,
+      "noop_byte_identical": true,
+      "head_edit_only_allowed_bytes": true,
+      "source_unchanged": true,
+      "private_sample_in_bundle": false
+    },
+    {
+      "sample_label": "after_02.sav",
+      "raw_bytes": 2767,
+      "payload_bytes": 572088,
+      "header": "060100003eeacea6b8ba0800",
+      "inner_low32": "0x71F87E8C",
+      "outer_crc32": "0x974F3669",
+      "head": "0x261C4A52",
+      "body": "0x61B31723",
+      "cape": "0x4657CFB3",
+      "known_layout": true,
+      "noop_byte_identical": true,
+      "head_edit_only_allowed_bytes": true,
+      "source_unchanged": true,
+      "private_sample_in_bundle": false
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HD2 Armor Desk loadout preset v1 (proposed handoff contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "preset_id",
+    "name",
+    "head",
+    "body",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "preset_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "maxItems": 64
+    },
+    "head": {
+      "$ref": "#/$defs/slot_intent"
+    },
+    "body": {
+      "$ref": "#/$defs/slot_intent"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "item_ref": {
+      "type": "object",
+      "required": [
+        "item_key",
+        "id_u32",
+        "item_type",
+        "label_snapshot"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "item_key": {
+          "type": "string",
+          "pattern": "^(armor|helmet|cape|unknown):0x[0-9A-F]{8}$"
+        },
+        "id_u32": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "item_type": {
+          "enum": [
+            "armor",
+            "helmet",
+            "cape",
+            "unknown"
+          ]
+        },
+        "label_snapshot": {
+          "type": "string",
+          "maxLength": 512
+        }
+      }
+    },
+    "slot_intent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "keep"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "item"
+          ],
+          "properties": {
+            "operation": {
+              "const": "set"
+            },
+            "item": {
+              "$ref": "#/$defs/item_ref"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$comment": "body Set requires Armor; head allows Armor or Helmet. Both reject unconfirmed Unknown in player mode. Keep means no patch, never ID zero. Application-level validation required."
+}

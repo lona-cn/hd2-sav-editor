@@ -1,0 +1,39 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sav_codec",
+    "crates/loadout_domain",
+    "crates/local_io",
+    "crates/app",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+sav_codec = { path = "crates/sav_codec" }
+loadout_domain = { path = "crates/loadout_domain" }
+local_io = { path = "crates/local_io" }
+
+lz4_flex = { version = "0.11.3", default-features = false, features = ["std"] }
+crc32fast = "1.4.2"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140", features = ["preserve_order"] }
+csv = "1.3.1"
+sha2 = "0.10.8"
+thiserror = "2.0.12"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2

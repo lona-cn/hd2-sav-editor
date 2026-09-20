@@ -1,0 +1,6 @@
+# Pinned so a fresh clone builds with the toolchain this was verified against.
+# `cargo test --workspace --locked` passes all tests on this exact version.
+[toolchain]
+channel = "1.96.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
