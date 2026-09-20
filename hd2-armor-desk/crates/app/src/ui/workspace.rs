@@ -9,10 +9,11 @@
 
 use std::path::PathBuf;
 
+use crate::legal::{self, NOTICE_INTRO, NOTICE_RESPONSIBILITY, NOTICE_SAVE_RISK, NOTICE_TITLE};
 use crate::update::{
     self, ReleaseInfo, UpdateCheck, UpdateState, CURRENT_RELEASE_TAG, RELEASES_PAGE_URL,
 };
-use gpui_kit::base::Disableable as _;
+use gpui_kit::base::{Disableable as _, StyledExt as _};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::{DialogAction, DialogFooter};
 use gpui_kit::component::input::{Input, InputEvent, InputState};
@@ -48,11 +49,62 @@ const OK: u32 = 0x65D49A;
 const OK_DIM: u32 = 0x173226;
 const INFO: u32 = 0x72A7FF;
 
+type LegalAcknowledgementWriter = fn() -> std::io::Result<()>;
+
+fn legal_notice_section(
+    number: &'static str,
+    heading: &'static str,
+    text: &'static str,
+    accent: u32,
+) -> Div {
+    div()
+        .flex()
+        .items_start()
+        .gap_3()
+        .p_4()
+        .rounded_md()
+        .border_1()
+        .border_color(rgb(CARD_BORDER))
+        .bg(rgb(CARD_BG))
+        .child(
+            div()
+                .w(px(30.0))
+                .h(px(30.0))
+                .flex_shrink_0()
+                .flex()
+                .items_center()
+                .justify_center()
+                .rounded_full()
+                .bg(rgb(accent))
+                .text_color(rgb(BG))
+                .text_sm()
+                .font_semibold()
+                .child(number),
+        )
+        .child(
+            div()
+                .flex_1()
+                .flex()
+                .flex_col()
+                .gap_2()
+                .child(
+                    div()
+                        .text_sm()
+                        .font_semibold()
+                        .text_color(rgb(TEXT))
+                        .child(heading),
+                )
+                .child(div().text_sm().text_color(rgb(MUTED)).child(text)),
+        )
+}
+
 pub struct WorkspaceView {
     state: Entity<AppState>,
     search_input: Entity<InputState>,
     preset_name_input: Entity<InputState>,
     _subscriptions: Vec<Subscription>,
+    legal_acknowledgement_required: bool,
+    pending_initial_path: Option<PathBuf>,
 }
 
 #[derive(Clone)]
@@ -171,6 +223,37 @@ fn begin_commit(
 
 impl WorkspaceView {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let (acknowledged, registry_read_error) = match legal::is_acknowledged() {
+            Ok(acknowledged) => (acknowledged, None),
+            Err(error) => (false, Some(format!("无法读取当前用户的确认记录：{error}"))),
+        };
+        Self::new_with_legal_state(
+            window,
+            cx,
+            acknowledged,
+            legal::acknowledge,
+            registry_read_error,
+        )
+    }
+
+    /// Test seam for exercising the first-run modal without touching the user's registry.
+    #[doc(hidden)]
+    pub fn new_with_legal_acknowledgement(
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        acknowledged: bool,
+        acknowledge: LegalAcknowledgementWriter,
+    ) -> Self {
+        Self::new_with_legal_state(window, cx, acknowledged, acknowledge, None)
+    }
+
+    fn new_with_legal_state(
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        acknowledged: bool,
+        acknowledge: LegalAcknowledgementWriter,
+        registry_read_error: Option<String>,
+    ) -> Self {
         let state = cx.new(|_| AppState::new());
         let search_input =
             cx.new(|cx| InputState::new(window, cx).placeholder("搜索护甲名称或 ID"));
@@ -197,10 +280,25 @@ impl WorkspaceView {
             cx.observe(&state, |_, _, cx| cx.notify()),
         ];
 
+        if !acknowledged {
+            cx.defer_in(window, move |_, window, cx| {
+                let view = cx.entity();
+                Self::open_legal_risk_dialog(
+                    view,
+                    acknowledge,
+                    registry_read_error.clone(),
+                    window,
+                    cx,
+                );
+            });
+        }
+
         WorkspaceView {
             state,
             search_input,
             preset_name_input,
+            legal_acknowledgement_required: !acknowledged,
+            pending_initial_path: None,
             _subscriptions: subscriptions,
         }
     }
@@ -351,6 +449,10 @@ impl WorkspaceView {
     /// `open_path` needs a `Context<Self>`, which is only available after the
     /// entity is constructed; the window builder calls this immediately after.
     pub fn open_initial_path(&mut self, path: PathBuf, cx: &mut Context<Self>) {
+        if self.legal_acknowledgement_required {
+            self.pending_initial_path = Some(path);
+            return;
+        }
         self.open_path(path, cx);
     }
 
@@ -525,6 +627,113 @@ impl WorkspaceView {
                 Err(message) => state.status = StatusLine::error(message),
             }
             cx.notify();
+        });
+    }
+
+    fn open_legal_risk_dialog(
+        view: Entity<Self>,
+        acknowledge: LegalAcknowledgementWriter,
+        registry_read_error: Option<String>,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
+        window.open_dialog(cx, move |dialog, _, _| {
+            let acknowledged_view = view.clone();
+            let mut dialog = dialog
+                .title(
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap_3()
+                        .child(
+                            div()
+                                .px_2()
+                                .py_1()
+                                .rounded_md()
+                                .bg(rgb(DANGER_DIM))
+                                .text_color(rgb(DANGER))
+                                .text_xs()
+                                .font_semibold()
+                                .child("首次启动确认"),
+                        )
+                        .child(NOTICE_TITLE),
+                )
+                .width(px(760.0))
+                .max_w(px(760.0))
+                .margin_top(px(48.0))
+                .close_button(false)
+                .overlay_closable(false)
+                .keyboard(false)
+                .child(
+                    div()
+                        .px_4()
+                        .py_3()
+                        .rounded_md()
+                        .bg(rgb(ACCENT_DIM))
+                        .border_1()
+                        .border_color(rgb(ACCENT))
+                        .text_sm()
+                        .text_color(rgb(TEXT))
+                        .child("继续前请完整阅读。只有下方确认按钮可以关闭此窗口。"),
+                )
+                .child(legal_notice_section("01", "非官方关系", NOTICE_INTRO, INFO))
+                .child(legal_notice_section(
+                    "02",
+                    "修改存档的规则与数据风险",
+                    NOTICE_SAVE_RISK,
+                    ACCENT,
+                ))
+                .child(legal_notice_section(
+                    "03",
+                    "责任与法律意见声明",
+                    NOTICE_RESPONSIBILITY,
+                    DANGER,
+                ));
+
+            if let Some(error) = registry_read_error.as_ref() {
+                dialog = dialog.child(
+                    div()
+                        .p_3()
+                        .rounded_md()
+                        .bg(rgb(DANGER_DIM))
+                        .text_sm()
+                        .text_color(rgb(DANGER))
+                        .child(format!(
+                            "{error}。本次仍需确认；仅在确认记录成功写入后才能继续。"
+                        )),
+                );
+            }
+
+            dialog.footer(
+                DialogFooter::new().child(
+                    DialogAction::new().child(
+                        Button::new("legal-risk-acknowledge")
+                            .debug_selector(|| "legal-risk-acknowledge".into())
+                            .label("我已查看并了解上述法律与数据风险")
+                            .primary()
+                            .on_click(move |_, window, cx| match acknowledge() {
+                                Ok(()) => {
+                                    acknowledged_view.update(cx, |view, cx| {
+                                        view.legal_acknowledgement_required = false;
+                                        if let Some(path) = view.pending_initial_path.take() {
+                                            view.open_path(path, cx);
+                                        }
+                                        cx.notify();
+                                    });
+                                    window.close_dialog(cx);
+                                }
+                                Err(error) => {
+                                    window.push_notification(
+                                        Notification::new().message(format!(
+                                            "无法保存确认记录，尚未允许继续：{error}"
+                                        )),
+                                        cx,
+                                    );
+                                }
+                            }),
+                    ),
+                ),
+            )
         });
     }
 

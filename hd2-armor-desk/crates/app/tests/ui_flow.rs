@@ -26,6 +26,13 @@ use sav_codec::{fields, SaveImage};
 /// Each test gets its own directory: the tests run in parallel and several of
 /// them create backups, so a shared root would leak state between them.
 static SCRATCH_SEQ: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+static LEGAL_ACKNOWLEDGED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+fn acknowledge_without_registry() -> std::io::Result<()> {
+    LEGAL_ACKNOWLEDGED.store(true, std::sync::atomic::Ordering::SeqCst);
+    Ok(())
+}
 
 fn scratch_root() -> PathBuf {
     let seq = SCRATCH_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -107,6 +114,13 @@ fn fixture(name: &str) -> PathBuf {
 /// and notification overlay layers. Without `Root` the first `open_dialog` call
 /// panics, so testing it any other way would not exercise the real window.
 fn build(cx: &mut TestAppContext) -> (gpui_kit::Entity<WorkspaceView>, VisualTestContext) {
+    build_with_legal_state(cx, true)
+}
+
+fn build_with_legal_state(
+    cx: &mut TestAppContext,
+    acknowledged: bool,
+) -> (gpui_kit::Entity<WorkspaceView>, VisualTestContext) {
     cx.update(|cx| {
         gpui_kit::init(cx);
         configure_theme(cx);
@@ -116,12 +130,20 @@ fn build(cx: &mut TestAppContext) -> (gpui_kit::Entity<WorkspaceView>, VisualTes
     });
     let mut view: Option<gpui_kit::Entity<WorkspaceView>> = None;
     let (_, cx) = cx.add_window_view(|window, cx| {
-        let workspace = cx.new(|cx| WorkspaceView::new(window, cx));
+        let workspace = cx.new(|cx| {
+            WorkspaceView::new_with_legal_acknowledgement(
+                window,
+                cx,
+                acknowledged,
+                acknowledge_without_registry,
+            )
+        });
         view = Some(workspace.clone());
         gpui_kit::component::Root::new(workspace, window, cx)
     });
     let view = view.expect("窗口构建时应当建立 WorkspaceView");
     let cx = cx.to_owned();
+    cx.run_until_parked();
     (view, cx)
 }
 
@@ -920,6 +942,56 @@ fn existing_seeded_catalog_promotes_collected_armors_to_user_verified(cx: &mut T
         item.metadata.passive_tags,
         ["Adreno-Defibrillator"],
         "补齐的被动元数据应写回便携目录"
+    );
+}
+
+#[gpui_kit::test]
+fn first_run_requires_explicit_legal_acknowledgement(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    LEGAL_ACKNOWLEDGED.store(false, std::sync::atomic::Ordering::SeqCst);
+    let (view, mut cx) = build_with_legal_state(cx, false);
+
+    let initial_path = fixture("valid_baseline.bin");
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| view.open_initial_path(initial_path, cx));
+    });
+    cx.run_until_parked();
+    assert!(
+        cx.update(|_, cx| view.read(cx).state().read(cx).snapshot.is_none()),
+        "确认前不能读取命令行传入的存档"
+    );
+
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("dialog-layer").is_some(),
+        "首次启动应显示模态层"
+    );
+    assert!(
+        cx.debug_bounds("legal-risk-acknowledge").is_some(),
+        "模态窗口应提供唯一的明确确认按钮"
+    );
+
+    cx.update(|window, cx| window.press("escape", cx));
+    cx.run_until_parked();
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("legal-risk-acknowledge").is_some(),
+        "Escape 不得绕过强制确认"
+    );
+
+    click(&mut cx, "legal-risk-acknowledge");
+    assert!(
+        LEGAL_ACKNOWLEDGED.load(std::sync::atomic::Ordering::SeqCst),
+        "点击确认必须持久化确认记录"
+    );
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("dialog-layer").is_none(),
+        "成功记录确认后应关闭模态窗口"
+    );
+    assert!(
+        cx.update(|_, cx| view.read(cx).state().read(cx).snapshot.is_some()),
+        "确认后才应读取排队的初始存档"
     );
 }
 

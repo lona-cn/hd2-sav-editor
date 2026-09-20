@@ -169,8 +169,8 @@ examples/         目录与预设的示例文件
 | `sav_codec` unit + golden + oracle | 2 + 11 + 2 passed | 14 个 fixture 的接受/拒绝、字节保真、白名单差异范围、228 组 MurmurHash64A 向量 |
 | `loadout_domain` | 17 + 21 + 14 passed | 目录去重与类型判定、CSV/JSON 导入、冲突与非法值、预设语义 |
 | `local_io` unit + discovery + monitor + transactions | 1 + 1 + 9 + 15 passed | Steam 存档发现、稳定读取、备份、冲突拒绝、风险写入最新文件、恢复范围 |
-| `app` single-instance + update + ui_flow | 1 + 2 + 21 passed | Windows 实例锁生命周期、Release 检查与校验下载；**真实 GPUI 窗口内派发鼠标事件** |
-| 合计 | **117 passed, 0 failed** | |
+| `app` single-instance + legal + update + ui_flow | 1 + 1 + 2 + 22 passed | Windows 实例锁、注册表确认记录、强制首启模态、Release 检查与校验下载；**真实 GPUI 窗口内派发鼠标事件** |
+| 合计 | **119 passed, 0 failed** | |
 
 `ui_flow` 不是静态断言：它在 GPUI 的 headless 测试应用里构建真实的
 `WorkspaceView`，按元素位置派发真实的鼠标事件，再断言状态变化。
