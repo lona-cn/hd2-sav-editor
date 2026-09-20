@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(target_os = "windows", not(debug_assertions)),
+    windows_subsystem = "windows"
+)]
+
 //! HD2 Armor Desk — Windows 双甲配置器入口。
 //!
 //! 窗口结构：`Root` 包裹 `WorkspaceView`，由 `Root` 负责对话框、通知等覆盖层。
