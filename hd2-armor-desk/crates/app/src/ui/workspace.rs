@@ -321,7 +321,8 @@ impl WorkspaceView {
                 BackgroundResult::Candidates(rows) => {
                     if rows.is_empty() {
                         state.status = StatusLine::info(
-                            "未在常见 Steam 目录发现存档；请手动选择 testament_new.sav".to_string(),
+                            "未在 Steam userdata 目录发现存档；请手动选择 testament_new.sav"
+                                .to_string(),
                         );
                     } else {
                         state.status = StatusLine::info(format!("发现 {} 个候选存档", rows.len()));
@@ -450,7 +451,7 @@ impl WorkspaceView {
             let mut dialog = dialog
                 .title("打开存档")
                 .width(px(620.0))
-                .child("优先从常见 Steam 目录中选择；也可以手动浏览任意 .sav 文件。");
+                .child("优先从 Steam userdata 目录中选择；也可以手动浏览任意 .sav 文件。");
 
             if candidates.is_empty() {
                 dialog = dialog.child("尚未扫描到候选存档。");
@@ -1851,7 +1852,7 @@ impl WorkspaceView {
                         Button::new("discover")
                             .debug_selector(|| "toolbar-discover".into())
                             .label("自动查找")
-                            .tooltip("扫描常见 Steam 存档目录")
+                            .tooltip("扫描 Steam 安装目录下的 userdata")
                             .on_click(cx.listener(|view, _, window, cx| {
                                 let task = view.state.update(cx, |_, cx| spawn_discover(cx));
                                 let view = cx.entity();

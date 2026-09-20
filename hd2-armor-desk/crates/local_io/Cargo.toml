@@ -24,3 +24,4 @@ windows-sys = { version = "0.59.0", features = [
     "Win32_System_IO",
     "Win32_System_Threading",
 ] }
+winreg = "0.55.0"

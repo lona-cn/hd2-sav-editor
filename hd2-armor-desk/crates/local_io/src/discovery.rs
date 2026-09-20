@@ -1,10 +1,46 @@
 //! Restricted discovery of Steam save candidates.
 //!
-//! Only the documented layout is probed:
+//! The documented Steam Cloud layout is probed below every known Steam root:
 //! `<steam>\userdata\<account>\553850\remote\testament_new.sav`.
+//! An alternate direct `<account>\553850\testament_new.sav` layout is also accepted.
 //! No recursive disk scan, and no guessing which account is "current".
 
 use std::path::{Path, PathBuf};
+
+#[cfg(windows)]
+fn installed_steam_root() -> Option<PathBuf> {
+    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
+
+    let steam = RegKey::predef(HKEY_CURRENT_USER)
+        .open_subkey(r"Software\Valve\Steam")
+        .ok()?;
+    let path: String = steam.get_value("SteamPath").ok()?;
+    let path = path.trim();
+    (!path.is_empty()).then(|| PathBuf::from(path))
+}
+
+#[cfg(not(windows))]
+fn installed_steam_root() -> Option<PathBuf> {
+    None
+}
+
+fn push_existing_root(roots: &mut Vec<PathBuf>, path: PathBuf) {
+    if !path.is_dir() {
+        return;
+    }
+
+    let canonical = path.canonicalize().ok();
+    let already_present = roots.iter().any(|existing| match &canonical {
+        Some(canonical) => existing
+            .canonicalize()
+            .map(|existing| existing == *canonical)
+            .unwrap_or(false),
+        None => existing == &path,
+    });
+    if !already_present {
+        roots.push(path);
+    }
+}
 
 /// Application directory used by this workflow.
 pub const APP_ID: &str = "553850";
@@ -38,26 +74,23 @@ impl SaveCandidate {
 pub fn steam_roots() -> Vec<PathBuf> {
     let mut roots = Vec::new();
 
-    // Windows registry is the authoritative location, but reading it needs the
-    // `windows` crate; the common install paths cover the default cases and the
-    // user can always pick a file by hand.
+    // `userdata` lives below the Steam client installation, which can be
+    // anywhere. Steam records that root here even when it is not under
+    // Program Files.
+    if let Some(path) = installed_steam_root() {
+        push_existing_root(&mut roots, path);
+    }
     for base in [
         r"C:\Program Files (x86)\Steam",
         r"C:\Program Files\Steam",
         r"D:\Steam",
         r"E:\Steam",
     ] {
-        let path = PathBuf::from(base);
-        if path.is_dir() {
-            roots.push(path);
-        }
+        push_existing_root(&mut roots, PathBuf::from(base));
     }
 
     if let Ok(library) = std::env::var("STEAM_LIBRARY") {
-        let path = PathBuf::from(library);
-        if path.is_dir() {
-            roots.push(path);
-        }
+        push_existing_root(&mut roots, PathBuf::from(library));
     }
     roots
 }
@@ -79,26 +112,34 @@ pub fn find_candidates(steam_root: &Path) -> Vec<SaveCandidate> {
         if account_dir.is_empty() || !account_dir.chars().all(|ch| ch.is_ascii_digit()) {
             continue;
         }
-        let save = account_path.join(APP_ID).join("remote").join(SAVE_NAME);
-        if let Ok(metadata) = std::fs::metadata(&save) {
-            if !metadata.is_file() {
-                continue;
+        for save in [
+            account_path.join(APP_ID).join("remote").join(SAVE_NAME),
+            account_path.join(APP_ID).join(SAVE_NAME),
+        ] {
+            if let Ok(metadata) = std::fs::metadata(&save) {
+                if !metadata.is_file() {
+                    continue;
+                }
+                candidates.push(SaveCandidate {
+                    path: save,
+                    account_dir: account_dir.clone(),
+                    size: metadata.len(),
+                    modified: metadata
+                        .modified()
+                        .ok()
+                        .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|duration| duration.as_secs())
+                        .unwrap_or(0),
+                });
             }
-            candidates.push(SaveCandidate {
-                path: save,
-                account_dir: account_dir.clone(),
-                size: metadata.len(),
-                modified: metadata
-                    .modified()
-                    .ok()
-                    .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
-                    .map(|duration| duration.as_secs())
-                    .unwrap_or(0),
-            });
         }
     }
     // Deterministic order; the user chooses, so no "newest wins" default.
-    candidates.sort_by(|a, b| a.account_dir.cmp(&b.account_dir));
+    candidates.sort_by(|a, b| {
+        a.account_dir
+            .cmp(&b.account_dir)
+            .then_with(|| a.path.cmp(&b.path))
+    });
     candidates
 }
 
