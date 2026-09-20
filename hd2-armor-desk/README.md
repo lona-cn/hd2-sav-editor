@@ -7,6 +7,7 @@ Windows 上的 HELLDIVERS 2 存档双甲配置工具。用 Rust + GPUI 实现，
 - **身体槽位**：默认可直接编辑；需要临时保护原值时可手动锁定。
 - **差异预览**：写回前先看清会改哪两个槽位。
 - **另存 / 写回**：另存不动源文件；安全与风险写回都会先备份，并在写入后回读核对。
+- **单实例运行**：启动时先获取 Windows 命名互斥锁；如果已有实例，新进程提示后退出。
 
 > 这是本机测试通过的可运行程序，不是方案或截图。已知限制见文末「已知问题」。
 
@@ -31,6 +32,7 @@ Windows 上的 HELLDIVERS 2 存档双甲配置工具。用 Rust + GPUI 实现，
 - 需要 WebView2 以外的系统运行时吗？不需要。程序使用 DirectWrite + Direct3D，
   这些是 Windows 自带组件。
 - 不需要安装 Rust、Python 或 .NET。
+- 同一 Windows 登录会话只运行一个 Armor Desk 实例，避免重复占用内存和 GPU 资源。
 
 ---
 
@@ -47,6 +49,7 @@ Windows 上的 HELLDIVERS 2 存档双甲配置工具。用 Rust + GPUI 实现，
 | 恢复整份备份 | 列出 `backups\` 中的备份并整体恢复（范围比"恢复普通头盔"大得多） |
 | 保存为预设 | 把当前的头部/身体意图存成预设（只存意图，不存存档内容） |
 | 诊断信息 | 展开路径、长度、两层校验值等排查信息 |
+| 检查更新 | 读取本项目最新 GitHub Release；可下载并校验 Windows x64 ZIP，失败时可打开 Releases 页面 |
 
 ### 两个槽位卡片
 
@@ -163,12 +166,11 @@ examples/         目录与预设的示例文件
 
 | 套件 | 结果 | 覆盖内容 |
 |---|---|---|
-| `sav_codec` golden | 11 passed | 14 个 fixture 的接受/拒绝、字节保真、白名单差异范围 |
-| `sav_codec` oracle | 2 passed | 228 组 MurmurHash64A 向量 + 与 Python 参考实现互读 |
+| `sav_codec` unit + golden + oracle | 2 + 11 + 2 passed | 14 个 fixture 的接受/拒绝、字节保真、白名单差异范围、228 组 MurmurHash64A 向量 |
 | `loadout_domain` | 17 + 21 + 14 passed | 目录去重与类型判定、CSV/JSON 导入、冲突与非法值、预设语义 |
-| `local_io` unit + monitor + transactions | 1 + 9 + 15 passed | 稳定读取、备份、冲突拒绝、风险写入最新文件、恢复范围 |
-| `app` ui_flow | 18 passed | **真实 GPUI 窗口内派发鼠标事件**：默认解锁、槽位切换、风险写入、监视与恢复 |
-| 合计 | **110 passed, 0 failed** | |
+| `local_io` unit + discovery + monitor + transactions | 1 + 1 + 9 + 15 passed | Steam 存档发现、稳定读取、备份、冲突拒绝、风险写入最新文件、恢复范围 |
+| `app` single-instance + update + ui_flow | 1 + 2 + 21 passed | Windows 实例锁生命周期、Release 检查与校验下载；**真实 GPUI 窗口内派发鼠标事件** |
+| 合计 | **117 passed, 0 failed** | |
 
 `ui_flow` 不是静态断言：它在 GPUI 的 headless 测试应用里构建真实的
 `WorkspaceView`，按元素位置派发真实的鼠标事件，再断言状态变化。
@@ -243,11 +245,13 @@ Windows 桌面上实际启动重建后的程序，并用合成存档完成：
 
 ## 10. 隐私
 
-- 程序不联网、不上传任何数据、不扫描整盘。
+- 程序不上传存档或其他本机数据，也不扫描整盘；仅在用户点击“检查更新”后访问本项目的
+  GitHub Release API，并按用户确认下载发布包。
 - 只在软件可执行文件旁的 `workspace\` 目录中读写自己的目录、预设和备份，
   不向 `%LOCALAPPDATA%` 写入文件。
 - 监视模式只读取你选定的那一个文件。
 - 诊断信息只显示路径、长度和校验值，不含存档原始内容。
+- 更新包只有在大小与 SHA-256 均匹配 GitHub Release 元数据后才会保留。
 
 ---
 

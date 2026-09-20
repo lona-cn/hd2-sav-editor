@@ -9,9 +9,18 @@
 
 use gpui_kit::component::Root;
 use gpui_kit::{point, px, size, App, AppContext as _, Bounds, WindowBounds, WindowOptions};
+use hd2_armor_desk::single_instance::{notify_startup_blocked, SingleInstanceGuard};
 use hd2_armor_desk::ui::{configure_theme, WorkspaceView};
 
 fn main() {
+    let _instance_guard = match SingleInstanceGuard::acquire() {
+        Ok(guard) => guard,
+        Err(error) => {
+            notify_startup_blocked(&error);
+            return;
+        }
+    };
+
     // Optional: a save path on the command line (file association, drag-and-drop
     // onto the exe, or a smoke test). Everything else is unchanged.
     let initial_path = std::env::args_os().nth(1).map(std::path::PathBuf::from);

@@ -924,6 +924,46 @@ fn existing_seeded_catalog_promotes_collected_armors_to_user_verified(cx: &mut T
 }
 
 #[gpui_kit::test]
+fn update_failures_offer_a_releases_page_fallback(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("toolbar-update").is_some(),
+        "工具栏应提供更新检查入口"
+    );
+
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.update_state =
+                hd2_armor_desk::update::UpdateState::CheckFailed("网络不可用".to_string());
+            cx.notify();
+        });
+    });
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("update-open-releases").is_some(),
+        "检查失败时应提供 Releases 页面按钮"
+    );
+
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.update_state =
+                hd2_armor_desk::update::UpdateState::DownloadFailed("磁盘已满".to_string());
+            cx.notify();
+        });
+    });
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("update-open-releases").is_some(),
+        "下载失败时仍应提供 Releases 页面按钮"
+    );
+}
+
+#[gpui_kit::test]
 fn app_state_defaults_are_safe(cx: &mut TestAppContext) {
     let _env = ScratchEnv::install();
     cx.update(gpui_kit::init);

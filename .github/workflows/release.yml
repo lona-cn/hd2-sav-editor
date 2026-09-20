@@ -69,11 +69,6 @@ jobs:
         with:
           workspaces: hd2-armor-desk -> target
 
-      - name: Build release executable
-        working-directory: hd2-armor-desk
-        shell: pwsh
-        run: cargo build -p hd2-armor-desk --release --locked
-
       - name: Generate UTC+8 version
         id: version
         shell: pwsh
@@ -84,6 +79,13 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=release-$version" >> $env:GITHUB_OUTPUT
           "built_at=$builtAt" >> $env:GITHUB_OUTPUT
+
+      - name: Build release executable
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        env:
+          HD2_RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: cargo build -p hd2-armor-desk --release --locked
 
       - name: Package Windows release
         shell: pwsh

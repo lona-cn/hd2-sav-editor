@@ -16,10 +16,22 @@ loadout_domain.workspace = true
 local_io.workspace = true
 gpui-kit = { version = "0.6.4" }
 rfd = { version = "0.15.3", default-features = false }
+open = "5.4.4"
+serde.workspace = true
+sha2.workspace = true
+ureq = { version = "2.12.1", features = ["json", "proxy-from-env"] }
 
 [dev-dependencies]
 gpui-kit = { version = "0.6.4", features = ["test-support"] }
 local_io.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59.0", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"

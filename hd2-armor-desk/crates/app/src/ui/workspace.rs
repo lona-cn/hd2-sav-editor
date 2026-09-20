@@ -9,6 +9,9 @@
 
 use std::path::PathBuf;
 
+use crate::update::{
+    self, ReleaseInfo, UpdateCheck, UpdateState, CURRENT_RELEASE_TAG, RELEASES_PAGE_URL,
+};
 use gpui_kit::base::Disableable as _;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::{DialogAction, DialogFooter};
@@ -208,6 +211,95 @@ impl WorkspaceView {
     /// dispatched click; the view itself still owns every mutation.
     pub fn state(&self) -> &Entity<AppState> {
         &self.state
+    }
+
+    fn start_update_check(&mut self, cx: &mut Context<Self>) {
+        let should_start = self.state.update(cx, |state, cx| {
+            if state.update_state.is_busy() {
+                return false;
+            }
+            state.update_state = UpdateState::Checking;
+            state.status = StatusLine::info("正在检查 GitHub 最新 Release…".to_string());
+            cx.notify();
+            true
+        });
+        if !should_start {
+            return;
+        }
+
+        let task = cx.background_spawn(async move { update::check_for_update() });
+        cx.spawn(async move |view, cx| {
+            let result = task.await;
+            let _ = view.update(cx, |view, cx| {
+                view.state.update(cx, |state, cx| {
+                    match result {
+                        Ok(UpdateCheck::UpToDate(release)) => {
+                            state.status =
+                                StatusLine::info(format!("当前已是最新版本：{}", release.tag));
+                            state.update_state = UpdateState::UpToDate(release);
+                        }
+                        Ok(UpdateCheck::Available(release)) => {
+                            state.status = StatusLine::info(format!("发现新版本：{}", release.tag));
+                            state.update_state = UpdateState::Available(release);
+                        }
+                        Err(message) => {
+                            state.status = StatusLine::error(format!("检查更新失败：{message}"));
+                            state.update_state = UpdateState::CheckFailed(message);
+                        }
+                    }
+                    cx.notify();
+                });
+            });
+        })
+        .detach();
+    }
+
+    fn start_update_download(
+        &mut self,
+        release: ReleaseInfo,
+        destination: PathBuf,
+        cx: &mut Context<Self>,
+    ) {
+        let release_for_task = release.clone();
+        self.state.update(cx, |state, cx| {
+            state.status = StatusLine::info(format!("正在下载并校验 {}…", release.package.name));
+            state.update_state = UpdateState::Downloading(release);
+            cx.notify();
+        });
+        let task = cx.background_spawn(async move {
+            update::download_release_to(&release_for_task, &destination)
+        });
+        cx.spawn(async move |view, cx| {
+            let result = task.await;
+            let _ = view.update(cx, |view, cx| {
+                view.state.update(cx, |state, cx| {
+                    match result {
+                        Ok(receipt) => {
+                            state.status = StatusLine::info(format!(
+                                "更新包已下载并通过 SHA-256 校验：{}",
+                                receipt.path.display()
+                            ));
+                            state.update_state = UpdateState::Downloaded(receipt);
+                        }
+                        Err(message) => {
+                            state.status = StatusLine::error(format!("下载更新失败：{message}"));
+                            state.update_state = UpdateState::DownloadFailed(message);
+                        }
+                    }
+                    cx.notify();
+                });
+            });
+        })
+        .detach();
+    }
+
+    fn open_releases_page(&mut self, cx: &mut Context<Self>) {
+        if let Err(error) = open::that_detached(RELEASES_PAGE_URL) {
+            self.state.update(cx, |state, cx| {
+                state.status = StatusLine::error(format!("无法打开 Releases 页面：{error}"));
+                cx.notify();
+            });
+        }
     }
 
     // ---------------------------------------------------------------- opening
@@ -968,6 +1060,167 @@ impl WorkspaceView {
     }
 
     // ----------------------------------------------------------------- render
+
+    fn render_update_banner(&self, cx: &mut Context<Self>) -> Div {
+        let update_state = self.state.read(cx).update_state.clone();
+        let base = || {
+            div()
+                .flex()
+                .items_center()
+                .gap_3()
+                .px_5()
+                .py_2()
+                .bg(rgb(CARD_BG))
+                .border_b_1()
+                .border_color(rgb(CARD_BORDER))
+        };
+        let releases_button = |cx: &mut Context<Self>| {
+            Button::new("open-releases-page")
+                .debug_selector(|| "update-open-releases".into())
+                .label("打开 Releases 页面")
+                .on_click(cx.listener(|view, _, _, cx| view.open_releases_page(cx)))
+        };
+        let dismiss_button = |cx: &mut Context<Self>| {
+            Button::new("dismiss-update")
+                .label("关闭")
+                .ghost()
+                .on_click(cx.listener(|view, _, _, cx| {
+                    view.state.update(cx, |state, cx| {
+                        state.update_state = UpdateState::Idle;
+                        cx.notify();
+                    });
+                }))
+        };
+
+        match update_state {
+            UpdateState::Idle => div(),
+            UpdateState::Checking => base()
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(ACCENT))
+                        .child("正在检查更新…"),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(rgb(MUTED))
+                        .child(format!("当前版本：{CURRENT_RELEASE_TAG}")),
+                ),
+            UpdateState::UpToDate(release) => base()
+                .child(div().text_sm().text_color(rgb(OK)).child("已是最新版本"))
+                .child(
+                    div()
+                        .flex_1()
+                        .text_xs()
+                        .text_color(rgb(MUTED))
+                        .child(release.tag),
+                )
+                .child(dismiss_button(cx)),
+            UpdateState::Available(release) => {
+                let package_name = release.package.name.clone();
+                let release_for_download = release.clone();
+                base()
+                    .child(div().text_sm().text_color(rgb(ACCENT)).child("发现新版本"))
+                    .child(
+                        div()
+                            .flex_1()
+                            .text_xs()
+                            .text_color(rgb(TEXT))
+                            .child(format!(
+                                "{} · {}",
+                                release.tag,
+                                format_bytes(release.package.size)
+                            )),
+                    )
+                    .child(
+                        Button::new("download-update")
+                            .debug_selector(|| "update-download".into())
+                            .label("下载 ZIP")
+                            .primary()
+                            .on_click(cx.listener(move |view, _, _, cx| {
+                                let Some(destination) = rfd::FileDialog::new()
+                                    .set_title("保存最新 HD2 Armor Desk 发布包")
+                                    .set_file_name(&package_name)
+                                    .add_filter("ZIP 发布包", &["zip"])
+                                    .save_file()
+                                else {
+                                    return;
+                                };
+                                view.start_update_download(
+                                    release_for_download.clone(),
+                                    destination,
+                                    cx,
+                                );
+                            })),
+                    )
+                    .child(releases_button(cx))
+                    .child(dismiss_button(cx))
+            }
+            UpdateState::Downloading(release) => base()
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(ACCENT))
+                        .child("正在下载并校验…"),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(rgb(MUTED))
+                        .child(release.package.name),
+                ),
+            UpdateState::Downloaded(receipt) => base()
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(OK))
+                        .child("下载完成，SHA-256 校验通过"),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .text_xs()
+                        .text_color(rgb(MUTED))
+                        .child(receipt.path.display().to_string()),
+                )
+                .child(dismiss_button(cx)),
+            UpdateState::CheckFailed(message) => base()
+                .border_color(rgb(DANGER))
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(DANGER))
+                        .child("检查更新失败"),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .text_xs()
+                        .text_color(rgb(TEXT))
+                        .child(message),
+                )
+                .child(releases_button(cx))
+                .child(dismiss_button(cx)),
+            UpdateState::DownloadFailed(message) => base()
+                .border_color(rgb(DANGER))
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(DANGER))
+                        .child("下载更新失败"),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .text_xs()
+                        .text_color(rgb(TEXT))
+                        .child(message),
+                )
+                .child(releases_button(cx))
+                .child(dismiss_button(cx)),
+        }
+    }
 
     fn render_header(&self, cx: &mut Context<Self>) -> Div {
         let state = self.state.read(cx);
@@ -1812,6 +2065,7 @@ impl WorkspaceView {
         let busy = state.save_in_flight;
         let diagnostics = state.show_diagnostics;
         let dirty = state.is_dirty();
+        let update_busy = state.update_state.is_busy();
 
         div()
             .flex()
@@ -1926,6 +2180,21 @@ impl WorkspaceView {
                     ),
             )
             .child(div().flex_1())
+            .child(
+                Button::new("check-update")
+                    .debug_selector(|| "toolbar-update".into())
+                    .label(if update_busy {
+                        "更新处理中…"
+                    } else {
+                        "检查更新"
+                    })
+                    .ghost()
+                    .tooltip(format!("当前版本：{CURRENT_RELEASE_TAG}"))
+                    .when(update_busy, |button| button.disabled(true))
+                    .on_click(cx.listener(|view, _, _, cx| {
+                        view.start_update_check(cx);
+                    })),
+            )
             .child(
                 Button::new("watch")
                     .debug_selector(|| "toolbar-watch".into())
@@ -2427,6 +2696,7 @@ impl Render for WorkspaceView {
             .text_color(rgb(TEXT))
             .child(self.render_header(cx))
             .child(self.render_toolbar(cx))
+            .child(self.render_update_banner(cx))
             .child(
                 div()
                     .id("main-scroll")

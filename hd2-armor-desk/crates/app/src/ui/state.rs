@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::update::UpdateState;
 use gpui_kit::{AppContext as _, AsyncApp, Context, Task, WeakEntity};
 use loadout_domain::{
     apply_catalog_delta, import_legacy_csv, import_legacy_json, import_v2_json, preview_intent,
@@ -146,6 +147,8 @@ pub struct AppState {
     /// Result of the last read-back verification, shown in the diagnostics panel.
     pub last_verify_note: Option<String>,
     pub show_diagnostics: bool,
+    /// GitHub Release update check and package download status.
+    pub update_state: UpdateState,
 
     /// Handle for the polling loop; kept so it is not dropped.
     pub watch_task: Option<Task<()>>,
@@ -233,6 +236,7 @@ impl AppState {
             last_copy: None,
             last_verify_note: None,
             show_diagnostics: false,
+            update_state: UpdateState::Idle,
             watch_task: None,
         }
     }

@@ -5,6 +5,8 @@
 //! [`ui::WorkspaceView`] and dispatch real clicks into it; without it, the
 //! window interactions would only ever be exercised by hand.
 
+pub mod single_instance;
 pub mod ui;
+pub mod update;
 
 pub use ui::{state, workspace};
