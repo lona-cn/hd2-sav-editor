@@ -13,7 +13,7 @@ use local_io::{
     commit_to_source, commit_to_source_force_latest, prepare_commit, restore_backup, save_copy,
     sha256_hex, CommitOutcome,
 };
-use sav_codec::{fields, FieldPatch, SaveImage};
+use sav_codec::{fields, inner_checksum, FieldPatch, LayoutId, SaveImage};
 
 const OFFSET_HEAD: usize = fields::HEAD.0;
 const OFFSET_BODY: usize = fields::BODY.0;
@@ -340,6 +340,54 @@ fn force_latest_reapplies_an_explicit_body_choice_equal_to_the_old_baseline() {
         0xD346_1392,
         "risk mode must honor the explicit body choice, not the newer game value"
     );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn stale_old_draft_conflicts_then_force_latest_preserves_new_layout() {
+    let dir = temp_dir("cross_layout");
+    let source = dir.join("testament_new.sav");
+    std::fs::write(&source, fixture("valid_baseline.bin")).unwrap();
+    let (_, prepared) = prepare_head_armor(&source);
+    let latest = fixture("valid_new_baseline.bin");
+    std::fs::write(&source, &latest).unwrap();
+    let backups = dir.join("backups");
+
+    let refused = commit_to_source(&prepared, &backups).unwrap();
+    assert_eq!(refused.outcome, CommitOutcome::RejectedBeforeWrite);
+    assert_eq!(std::fs::read(&source).unwrap(), latest);
+    assert!(refused.backup_path.is_none());
+    assert!(!backups.exists());
+
+    let receipt = commit_to_source_force_latest(&prepared, &backups).unwrap();
+    assert_eq!(receipt.outcome, CommitOutcome::CommittedVerified);
+    assert_eq!(std::fs::read(receipt.backup_path.unwrap()).unwrap(), latest);
+    let latest_image = SaveImage::decode(latest).unwrap();
+    let written = SaveImage::decode(std::fs::read(&source).unwrap()).unwrap();
+    assert_eq!(written.layout_id(), Some(LayoutId::Observed0107));
+    let mut expected = latest_image.payload().to_vec();
+    expected[OFFSET_HEAD..OFFSET_HEAD + 4].copy_from_slice(&0xD346_1392u32.to_le_bytes());
+    let checksum = inner_checksum(&expected);
+    expected[12..16].copy_from_slice(&checksum.to_le_bytes());
+    assert_eq!(written.payload(), expected);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn force_latest_rejects_unknown_layout_without_touching_disk() {
+    let dir = temp_dir("force_unknown_layout");
+    let source = dir.join("testament_new.sav");
+    std::fs::write(&source, fixture("valid_baseline.bin")).unwrap();
+    let (_, prepared) = prepare_head_armor(&source);
+    let latest = fixture("unknown_layout_valid.bin");
+    std::fs::write(&source, &latest).unwrap();
+    let backups = dir.join("backups");
+    assert!(matches!(
+        commit_to_source_force_latest(&prepared, &backups),
+        Err(local_io::CommitError::LayoutNotWritable)
+    ));
+    assert_eq!(std::fs::read(&source).unwrap(), latest);
+    assert!(!backups.exists());
     let _ = std::fs::remove_dir_all(&dir);
 }
 

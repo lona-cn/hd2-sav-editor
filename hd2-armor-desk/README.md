@@ -144,6 +144,30 @@ cargo fmt --check
 依赖版本固定在 `Cargo.lock`，Rust 工具链固定在 `rust-toolchain.toml`（stable）。
 UI 层使用 `gpui-kit 0.6.4`（重导出 GPUI 与组件库），具体版本见 `Cargo.toml`。
 
+### 新旧布局与双向互验
+
+支持 `Observed0106`（572088 字节，头部 `060100003eeacea6b8ba0800`）和
+`Observed0107`（572092 字节，头部 `07010000b687e357bcba0800`），只接受精确的头部/长度组合。
+头部、披风、身体偏移仍为 `0x121`、`0x125`、`0x129`。未知组合只读；编辑不转换布局、不重建尾部。
+目录 v2 新增 `secondary_weapon`，最后通牒已分类，副武器仍禁止进入护甲槽。
+
+以下命令从本目录运行；Python 仅用于开发验证，正式程序不依赖 Python：
+
+```powershell
+python -m pip install -r ../reference/python/requirements.txt
+$env:PYTHONPATH = '../reference/python'
+python -m unittest discover -s ../reference/python/tests -v
+cargo test --workspace --locked
+python scripts/oracle_crosscheck.py target/oracle
+$env:HD2_REQUIRE_PYTHON_ORACLE = '1'
+cargo test -p sav_codec --test oracle --locked
+Remove-Item Env:HD2_REQUIRE_PYTHON_ORACLE
+```
+
+最后一步强制检查两种布局的 Python 输出，缺文件会失败，不会静默跳过。
+运行 `python scripts/generate_new_fixture.py` 可重建两份相同的新布局合成夹具及 manifest；
+真实玩家存档不作为公开夹具。新一轮验证记录见 `docs/TEST_RECORD.md` 顶部，以下旧记录保留为历史证据。
+
 ### 目录结构
 
 ```
@@ -152,7 +176,7 @@ crates/
   loadout_domain/ 意图与目录：草稿、撤销栈、差异预览、预设、导入
   local_io/       文件事务：稳定读取、只读监视、备份、写回、回读校验
   app/            GPUI 界面与后台任务调度
-tests/fixtures/   14 个合成样本（不可导入游戏）
+tests/fixtures/   新旧布局合成样本（不可导入游戏）
 examples/         目录与预设的示例文件
 ```
 
@@ -160,7 +184,7 @@ examples/         目录与预设的示例文件
 
 ## 7. 测试与验证记录
 
-以下为在本机（Windows 11 Pro 26200、Intel Core Ultra 5 250K Plus）实际运行的结果。
+以下为适配 Observed0107 之前在本机运行的历史结果，不作为新布局的验证证据。
 
 ### 自动测试
 

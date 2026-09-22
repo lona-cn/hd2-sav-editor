@@ -1,11 +1,28 @@
 //! Layout recognition. A valid checksum is not permission to write.
 
-/// Verified payload length for the observed layout.
-pub const KNOWN_LENGTH: usize = 572_088;
-/// Verified payload header for the observed layout.
-pub const KNOWN_HEADER: [u8; 12] = [
-    0x06, 0x01, 0x00, 0x00, 0x3E, 0xEA, 0xCE, 0xA6, 0xB8, 0xBA, 0x08, 0x00,
-];
+/// A payload layout whose equipment offsets have been verified.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LayoutId {
+    Observed0106,
+    Observed0107,
+}
+
+impl LayoutId {
+    /// Recognize an exact header and logical-length pair, never either alone.
+    pub fn recognize(payload: &[u8]) -> Option<Self> {
+        match (payload.len(), payload.get(..12)) {
+            (
+                572_088,
+                Some([0x06, 0x01, 0x00, 0x00, 0x3E, 0xEA, 0xCE, 0xA6, 0xB8, 0xBA, 0x08, 0x00]),
+            ) => Some(Self::Observed0106),
+            (
+                572_092,
+                Some([0x07, 0x01, 0x00, 0x00, 0xB6, 0x87, 0xE3, 0x57, 0xBC, 0xBA, 0x08, 0x00]),
+            ) => Some(Self::Observed0107),
+            _ => None,
+        }
+    }
+}
 
 /// Payload offsets established by controlled in-game tests.
 pub mod fields {
@@ -22,7 +39,7 @@ pub mod fields {
 /// Whether the decoded image may be written by the known-field editor.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LayoutSupport {
-    /// Length, header and both checksums match the verified layout.
+    /// Length, header and both checksums match a verified layout.
     KnownWritable,
     /// Decoded and checksum-valid, but field offsets are not verified here.
     DecodedReadOnly { reason: String },

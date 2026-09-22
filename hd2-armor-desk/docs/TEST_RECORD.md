@@ -2,6 +2,32 @@
 
 本文件只记录**实际运行过**的结果。未运行的项目明确写为 NOT RUN，不用推断代替。
 
+## 2026-09-22：Observed0107 兼容验证
+
+本轮在 Windows 本机执行；以下结果独立于后面的历史记录：
+
+| 验证 | 实际结果 |
+|---|---|
+| `cargo test --workspace --locked` | 128 passed，0 failed；覆盖新旧布局、混配头部/长度只读、跨布局冲突与 force-latest、目录迁移、武器槽位拒绝和 GPUI 加载 |
+| Python `unittest discover -s tests -v`（reference/python） | 48 passed，0 failed，含 Tk 界面和旧配置迁移 |
+| Rust → Python oracle | 两种布局各 3 种编辑，共 6 份输出的完整正文、未修改块和双层校验一致 |
+| Python → Rust oracle | 设置 `HD2_REQUIRE_PYTHON_ORACLE=1` 运行已编译 oracle 测试程序，2 项通过，两种布局输出均被检查 |
+| 缺输出故障实验 | 暂移新布局 Python 输出，严格反向检查退出 101；输出已恢复 |
+| `cargo clippy --workspace --all-targets --locked -- -D warnings` | 通过，无警告 |
+| 配套数据 | 两套夹具共同的 17 个文件逐字节一致；两套 schema 一致；内置目录通过 JSON Schema 校验 |
+| 真实新样本：Python 与 Rust | 支持 0107；无修改原样返回；内存编辑及重解码通过；非目标正文保留；源文件未改 |
+| 真实桌面 | Tk 检查器显示已知布局、头部/身体/披风/主副武器字段；原生 GPUI 应用用隔离副本显示 TR-117 与 TG-8，副本未写入 |
+
+真实样本逻辑长度 572092，外层 CRC32 `B2E4E0B3`、内层校验 `B44BA676`。
+真实样本不进入公开夹具。临时 Rust 冒烟 example 和隔离运行目录已在验证后清理。
+
+验证环境差异：直接从 Python 子进程调用 Cargo 时命中了用户 home 下启用不稳定 codegen-backend 的配置，
+因此该次 Cargo 启动失败；正常终端的隔离 Cargo 环境已完成全部 Rust 测试和 Clippy。
+严格反向检查随后直接运行本轮编译的测试程序通过，不把失败调用计为通过。
+
+发布工作流已加入 Python 测试及双向 oracle 必需检查；本轮未触发远端 GitHub Actions、未构建 release 包，
+也未进行游戏内回读、云同步并发或被动效果验证。以下是之前的历史测试与资源测量，不代表本轮重新测量。
+
 ## 环境
 
 | 项目 | 值 |

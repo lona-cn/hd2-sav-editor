@@ -28,6 +28,18 @@ POLL_MS = 500
 MAX_DIFF_ROWS = 2000
 MAX_JOURNAL_ROWS = 600
 
+LEGACY_DEFAULT_FIELDS = {
+    core.Field('头盔槽', 0x121, '用户换装验证'): 0x121,
+    core.Field('未知字段 0x0011', 0x11, '待逐项点击验证'): 0x11,
+    core.Field('未知字段 0x0015', 0x15, '待逐项点击验证'): 0x15,
+}
+
+
+def migrate_default_fields(fields):
+    defaults = {field.offset: field for field in core.DEFAULT_FIELDS}
+    return [defaults[LEGACY_DEFAULT_FIELDS[field]] if field in LEGACY_DEFAULT_FIELDS else field
+            for field in fields]
+
 
 def tree_frame(parent, columns, widths, labels, height=12):
     frame=ttk.Frame(parent)
@@ -70,12 +82,14 @@ class App:
         if self.settings_path.exists():
             try:settings=json.loads(self.settings_path.read_text(encoding='utf-8'))
             except (OSError,ValueError):pass
+        if not isinstance(settings,dict):settings={}
+        self.settings=settings
         self.fields=list(core.DEFAULT_FIELDS)
         if isinstance(settings.get('fields'),list):
             try:
                 fs=[core.Field(str(f['name']),int(f['offset']),str(f.get('confidence','自定义'))) for f in settings['fields']]
                 if fs and len(fs)<=256 and len({f.offset for f in fs})==len(fs) and all(16<=f.offset<=core.MAX_SIZE-4 for f in fs):
-                    self.fields=fs
+                    self.fields=migrate_default_fields(fs)
             except (ValueError,KeyError,TypeError):pass
         self.catalog=core.Catalog(self.workspace/'catalog.json')
         self.editor=None;self.latest=None;self.previous=None;self.baseline=None
@@ -247,7 +261,8 @@ class App:
         ttk.Label(self.hex_tab,text='正文含其他账户/会话状态。这里只做本地显示，导出的完整 .bin / .sav 不宜公开。').pack(anchor='w',pady=6)
 
     def persist_settings(self):
-        try:core.atomic_json(self.settings_path,{'last_path':self.active_path or self.path_var.get(),'poll_ms':self.poll_ms.get(),
+        try:core.atomic_json(self.settings_path,{**self.settings,
+                'last_path':self.active_path or self.path_var.get(),'poll_ms':self.poll_ms.get(),
                 'fields':[{'name':f.name,'offset':f.offset,'confidence':f.confidence} for f in self.fields]})
         except OSError as exc:self.bottom_status.set(f'配置保存失败：{exc}')
 

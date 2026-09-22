@@ -36,10 +36,37 @@ jobs:
         with:
           workspaces: hd2-armor-desk -> target
 
+      - name: Set up Python reference runtime
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Install reference dependencies
+        shell: pwsh
+        run: python -m pip install -r reference/python/requirements.txt
+
+      - name: Test Python reference and inspector
+        shell: pwsh
+        env:
+          PYTHONPATH: reference/python
+        run: python -m unittest discover -s reference/python/tests -v
+
       - name: Run tests
         working-directory: hd2-armor-desk
         shell: pwsh
         run: cargo test --workspace --locked
+
+      - name: Cross-check Rust outputs and emit Python outputs
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        run: python scripts/oracle_crosscheck.py target/oracle
+
+      - name: Require Python outputs to pass Rust verification
+        working-directory: hd2-armor-desk
+        shell: pwsh
+        env:
+          HD2_REQUIRE_PYTHON_ORACLE: '1'
+        run: cargo test -p sav_codec --test oracle --locked
 
   build:
     name: Build Windows release

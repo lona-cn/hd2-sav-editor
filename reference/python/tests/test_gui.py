@@ -1,5 +1,5 @@
 """Event-loop tests: run with a display, e.g. xvfb-run -a python -m unittest discover -s tests."""
-import os,struct,tempfile,time,unittest
+import json,os,struct,tempfile,time,unittest
 from pathlib import Path
 import tkinter as tk
 from test_core import fixture
@@ -64,8 +64,67 @@ class GuiTests(unittest.TestCase):
         self.app.accept_snapshot(s);self.root.update()
         self.assertEqual(len(self.app.catalog.records),n)
         self.assertIn('未知布局',self.app.file_status.get())
+        self.app.edit_enabled.set(True);self.app.update_edit_status()
+        self.assertTrue(self.app.stage_button.instate(['disabled']))
     def test_no_user_save_written_on_observation(self):
         self.assertEqual(list(Path(self.temp.name).glob('**/*.sav')),[])
+    def test_new_layout_can_observe_and_stage_without_writing_source(self):
+        header,size=c.LayoutId.OBSERVED_0107.value
+        raw=fixture(size,header);source=Path(self.temp.name)/'new.sav';source.write_bytes(raw)
+        snapshot=c.Snapshot.from_bytes(raw,str(source))
+        self.app.accept_snapshot(snapshot)
+        self.app.edit_enabled.set(True);self.app.toggle_edit();self.root.update()
+        self.assertTrue(self.app.stage_button.instate(['!disabled']))
+        self.assertEqual(self.app.fields_tree.item(str(0x121),'values')[0],'头部槽')
+        self.assertIn(self.app.catalog.key(0x121,0x056848E9),self.app.catalog.records)
+        self.app.editor.stage_u32(0x121,0x9F73133E);self.app.refresh_views()
+        self.assertEqual(c.u32(c.decode(self.app.editor.build()).payload,0x121),0x9F73133E)
+        self.assertEqual(source.read_bytes(),raw)
+
+
+@unittest.skipUnless(os.environ.get('DISPLAY') or os.name=='nt','GUI requires display')
+class SettingsTests(unittest.TestCase):
+    def test_exact_legacy_defaults_migrate_without_rewriting_settings_on_load(self):
+        fields=[
+            {'name':'头盔槽','offset':0x121,'confidence':'用户换装验证'},
+            {'name':'未知字段 0x0011','offset':0x11,'confidence':'待逐项点击验证'},
+            {'name':'未知字段 0x0015','offset':0x15,'confidence':'待逐项点击验证'},
+            {'name':'未知字段 0x0019','offset':0x19,'confidence':'待逐项点击验证'},
+            {'name':'我的观察','offset':0x140,'confidence':'自定义证据'},
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'settings.json'
+            settings={'last_path':'my-save.sav','poll_ms':'875','fields':fields,
+                      'custom_option':{'keep':['unchanged']}}
+            original=json.dumps(settings,ensure_ascii=False).encode('utf-8');path.write_bytes(original)
+            root=tk.Tk();app=sav_gui.App(root,Path(d),start_poll=False)
+            try:
+                self.assertEqual([f.name for f in app.fields],
+                                 ['头部槽','主武器槽','副武器槽','未知字段 0x0019','我的观察'])
+                self.assertEqual(app.fields[1].confidence,'新样本装备 ID 匹配')
+                self.assertEqual(app.fields[2].confidence,'新样本装备 ID 匹配')
+                self.assertEqual(path.read_bytes(),original)
+                app.persist_settings()
+                saved=json.loads(path.read_text(encoding='utf-8'))
+                for key in ['last_path','poll_ms','custom_option']:
+                    self.assertEqual(saved[key],settings[key])
+                self.assertEqual(saved['fields'][3:],fields[3:])
+            finally:app.close_for_test()
+    def test_custom_names_confidence_and_offsets_are_not_migrated(self):
+        fields=[
+            {'name':'我的头盔','offset':0x121,'confidence':'用户换装验证'},
+            {'name':'未知字段 0x0011','offset':0x11,'confidence':'我的证据'},
+            {'name':'未知字段 0x0015','offset':0x15,'confidence':'用户标注'},
+            {'name':'头盔槽','offset':0x140,'confidence':'用户换装验证'},
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'settings.json';path.write_text(json.dumps({'fields':fields}),encoding='utf-8')
+            root=tk.Tk();app=sav_gui.App(root,Path(d),start_poll=False)
+            try:
+                self.assertEqual(app.fields,[c.Field(**f) for f in fields])
+                app.persist_settings()
+                self.assertEqual(json.loads(path.read_text(encoding='utf-8'))['fields'],fields)
+            finally:app.close_for_test()
 
 if __name__=='__main__':unittest.main()
 

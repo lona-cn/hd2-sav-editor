@@ -97,6 +97,61 @@ fn head_accepts_armor_id() {
     );
 }
 
+#[test]
+fn new_layout_domain_edit_preserves_every_unrequested_byte() {
+    let image = SaveImage::decode(
+        include_bytes!("../../../tests/fixtures/valid_new_baseline.bin").to_vec(),
+    )
+    .unwrap();
+    let snapshot = snapshot_from(&image);
+    let intent = loadout_domain::LoadoutIntent {
+        head: SlotIntent::Set {
+            item: item_ref(0xD346_1392, ItemType::Armor, "FS-55 身体护甲"),
+        },
+        body: SlotIntent::Keep,
+    };
+    let patches = resolve_intent(&snapshot, &catalog_with_both(), &intent).unwrap();
+    let edited = SaveImage::decode(encode_intent(&image, &patches).unwrap()).unwrap();
+    assert_eq!(edited.layout_id(), Some(sav_codec::LayoutId::Observed0107));
+    let mut expected = image.payload().to_vec();
+    expected[OFFSET_HEAD..OFFSET_HEAD + 4].copy_from_slice(&0xD346_1392u32.to_le_bytes());
+    let checksum = sav_codec::inner_checksum(&expected);
+    expected[INNER_CHECKSUM_OFFSET..INNER_CHECKSUM_OFFSET + 4]
+        .copy_from_slice(&checksum.to_le_bytes());
+    assert_eq!(edited.payload(), expected);
+}
+
+#[test]
+fn verified_secondary_weapon_is_rejected_in_both_armor_slots() {
+    let image = image();
+    let snapshot = snapshot_from(&image);
+    let catalog = Catalog::from_items(vec![Item::new(
+        ItemType::SecondaryWeapon,
+        0x335B_8A1A,
+        Classification::UserVerified,
+    )])
+    .unwrap();
+    let secondary = item_ref(0x335B_8A1A, ItemType::SecondaryWeapon, "副武器");
+    let head_intent = loadout_domain::LoadoutIntent {
+        head: SlotIntent::Set {
+            item: secondary.clone(),
+        },
+        body: SlotIntent::Keep,
+    };
+    assert!(matches!(
+        resolve_intent(&snapshot, &catalog, &head_intent),
+        Err(ValidationError::HeadTypeNotAllowed(_))
+    ));
+    let body_intent = loadout_domain::LoadoutIntent {
+        head: SlotIntent::Keep,
+        body: SlotIntent::Set { item: secondary },
+    };
+    assert!(matches!(
+        resolve_intent(&snapshot, &catalog, &body_intent),
+        Err(ValidationError::BodyTypeNotAllowed(_))
+    ));
+}
+
 /// The body slot refuses a helmet.
 #[test]
 fn body_refuses_helmet() {

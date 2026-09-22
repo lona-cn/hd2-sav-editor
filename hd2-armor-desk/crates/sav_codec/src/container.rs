@@ -7,7 +7,7 @@
 
 use crate::checksum::{crc32, inner_checksum, INNER_CHECKSUM_OFFSET};
 use crate::error::{DecodeError, EncodeError};
-use crate::layout::{LayoutSupport, KNOWN_HEADER, KNOWN_LENGTH};
+use crate::layout::{LayoutId, LayoutSupport};
 
 /// Bytes per decompressed block.
 pub const BLOCK_SIZE: usize = 65536;
@@ -158,7 +158,7 @@ impl SaveImage {
         }
 
         // Checksums are valid; only now does layout matching decide write access.
-        let support = if payload.len() == KNOWN_LENGTH && payload[..12] == KNOWN_HEADER {
+        let support = if LayoutId::recognize(&payload).is_some() {
             LayoutSupport::KnownWritable
         } else {
             LayoutSupport::DecodedReadOnly {
@@ -194,6 +194,11 @@ impl SaveImage {
     /// Whether this image may be written by the known-field editor.
     pub fn support(&self) -> &LayoutSupport {
         &self.support
+    }
+
+    /// The exact recognized payload layout, independent of checksum reporting.
+    pub fn layout_id(&self) -> Option<LayoutId> {
+        LayoutId::recognize(&self.payload)
     }
 
     /// True when the layout matches the verified field offsets.

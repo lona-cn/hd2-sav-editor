@@ -35,7 +35,7 @@
         "properties": {
           "item_key": {
             "type": "string",
-            "pattern": "^(armor|primary_weapon|helmet|cape|unknown):0x[0-9A-F]{8}$"
+            "pattern": "^(armor|primary_weapon|secondary_weapon|helmet|cape|unknown):0x[0-9A-F]{8}$"
           },
           "id_u32": {
             "type": "integer",
@@ -46,6 +46,7 @@
             "enum": [
               "armor",
               "primary_weapon",
+              "secondary_weapon",
               "helmet",
               "cape",
               "unknown"

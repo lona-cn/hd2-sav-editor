@@ -897,6 +897,84 @@ fn existing_portable_catalog_takes_precedence_over_the_bundle(cx: &mut TestAppCo
 }
 
 #[gpui_kit::test]
+fn new_layout_opens_with_equipment_and_write_capability(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    open(&view, &mut cx, "valid_new_baseline.bin");
+    render(&mut cx);
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().read(cx);
+        assert!(state.can_write());
+        let snapshot = state.snapshot.as_ref().unwrap();
+        assert_eq!(snapshot.head_id(), Some(0x9F73_133E));
+        assert_eq!(snapshot.body_id(), Some(0x5D0D_8002));
+        assert_eq!(snapshot.payload.len(), 572_092);
+        assert!(snapshot.readonly_reason.is_none());
+    });
+}
+
+#[gpui_kit::test]
+fn bundled_secondary_type_migrates_unknown_without_losing_user_data(cx: &mut TestAppContext) {
+    let env = ScratchEnv::install();
+    let workspace = Workspace::open(env.root()).unwrap();
+    let mut item = Item::new(ItemType::Unknown, 0x335B_8A1A, Classification::Unknown);
+    item.display_name = "我的最后通牒".into();
+    item.note = "保留我的备注".into();
+    item.aliases = vec!["自定义别名".into()];
+    item.favorite = true;
+    item.observations.push(loadout_domain::Observation {
+        observed_offset: 0x15,
+        observed_slot: loadout_domain::SlotObservation::Unknown,
+        first_seen: None,
+        last_seen: None,
+        count: Some(7),
+        source_digest: None,
+        source_format: loadout_domain::SourceFormat::LegacyJson,
+    });
+    workspace
+        .save_catalog(&Catalog::from_items(vec![item.clone()]).unwrap())
+        .unwrap();
+    cx.update(gpui_kit::init);
+    let _state = cx.new(|_| AppState::new());
+    item.item_key = Item::make_key(ItemType::SecondaryWeapon, item.id_u32);
+    item.item_type = ItemType::SecondaryWeapon;
+    item.classification = Classification::UserVerified;
+    let persisted = workspace.load_catalog().unwrap();
+    assert_eq!(persisted.items(), &[item.clone()]);
+    assert!(persisted.get("unknown:0x335B8A1A").is_none());
+    let _reopened = cx.new(|_| AppState::new());
+    assert_eq!(workspace.load_catalog().unwrap().items(), &[item]);
+}
+
+#[gpui_kit::test]
+fn bundled_type_migration_preserves_explicit_choices_and_collisions(cx: &mut TestAppContext) {
+    let env = ScratchEnv::install();
+    let workspace = Workspace::open(env.root()).unwrap();
+    cx.update(gpui_kit::init);
+    let explicit = Item::new(ItemType::Unknown, 0x335B_8A1A, Classification::UserVerified);
+    workspace
+        .save_catalog(&Catalog::from_items(vec![explicit.clone()]).unwrap())
+        .unwrap();
+    let _state = cx.new(|_| AppState::new());
+    assert_eq!(workspace.load_catalog().unwrap().items(), &[explicit]);
+    let unknown = Item::new(ItemType::Unknown, 0x335B_8A1A, Classification::Unknown);
+    let typed = Item::new(
+        ItemType::SecondaryWeapon,
+        0x335B_8A1A,
+        Classification::UserVerified,
+    );
+    let entries = vec![unknown, typed];
+    workspace
+        .save_catalog(&Catalog::from_items(entries.clone()).unwrap())
+        .unwrap();
+    let _reopened = cx.new(|_| AppState::new());
+    assert_eq!(
+        workspace.load_catalog().unwrap().items(),
+        entries.as_slice()
+    );
+}
+
+#[gpui_kit::test]
 fn existing_seeded_catalog_promotes_collected_armors_to_user_verified(cx: &mut TestAppContext) {
     let env = ScratchEnv::install();
     let workspace = Workspace::open(env.root()).unwrap();

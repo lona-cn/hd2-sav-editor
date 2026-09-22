@@ -6,8 +6,8 @@
 use std::path::{Path, PathBuf};
 
 use sav_codec::{
-    crc32, fields, inner_checksum, murmur64a, DecodeError, EncodeError, FieldPatch, LayoutSupport,
-    PayloadOffset, SaveImage, BLOCK_SIZE, INNER_CHECKSUM_OFFSET,
+    crc32, fields, inner_checksum, murmur64a, DecodeError, EncodeError, FieldPatch, LayoutId,
+    LayoutSupport, PayloadOffset, SaveImage, BLOCK_SIZE, INNER_CHECKSUM_OFFSET,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -82,7 +82,6 @@ fn murmur64a_matches_all_reference_vectors() {
 fn fixtures_match_manifest_expectations() {
     let manifest = manifest();
     let cases = manifest["cases"].as_array().unwrap();
-    assert_eq!(cases.len(), 14, "fixture count changed");
 
     for case in cases {
         let name = case["file"].as_str().unwrap();
@@ -596,6 +595,90 @@ fn outer_crc_matches_reference_values() {
         let expected = parse_hex_u64(case["outer_crc32"].as_str().unwrap()) as u32;
         assert_eq!(crc32(&bytes[0x10..]), expected, "{}", case["file"]);
     }
+}
+
+#[test]
+fn layout_recognition_requires_exact_header_and_length_pairs() {
+    let old = SaveImage::decode(fixture("valid_baseline.bin")).unwrap();
+    let new = SaveImage::decode(fixture("valid_new_baseline.bin")).unwrap();
+    assert_eq!(old.layout_id(), Some(LayoutId::Observed0106));
+    assert_eq!(new.layout_id(), Some(LayoutId::Observed0107));
+    assert_eq!(LayoutId::recognize(&[]), None);
+
+    for (image, other) in [(&old, &new), (&new, &old)] {
+        // Keep a consistent inner length, but pair it with the other version tag.
+        let mut payload = image.payload().to_vec();
+        payload[..8].copy_from_slice(&other.payload()[..8]);
+        let raw = container_for_payload(image, payload);
+        let mismatch = SaveImage::decode(raw.clone()).unwrap();
+        assert_eq!(mismatch.layout_id(), None);
+        assert!(!mismatch.is_writable());
+        assert_eq!(mismatch.encode_patches(&[]).unwrap(), raw);
+        assert!(matches!(
+            mismatch.encode_patches(&[patch(&mismatch, fields::HEAD, 0x261C_4A52)]),
+            Err(EncodeError::LayoutNotWritable)
+        ));
+
+        // An exact header is insufficient if the slice has the other length.
+        let mut wrong_length = image.payload().to_vec();
+        wrong_length.resize(other.logical_size(), 0);
+        assert_eq!(LayoutId::recognize(&wrong_length), None);
+    }
+}
+
+#[test]
+fn new_layout_edit_preserves_header_tail_and_untouched_blocks() {
+    let raw = fixture("valid_new_baseline.bin");
+    let image = SaveImage::decode(raw.clone()).unwrap();
+    assert_eq!(image.encode_patches(&[]).unwrap(), raw);
+    assert_eq!(image.read_u32(fields::HEAD).unwrap(), 0x9F73_133E);
+    assert_eq!(image.read_u32(fields::BODY).unwrap(), 0x5D0D_8002);
+    assert_eq!(image.read_u32(fields::CAPE).unwrap(), 0x6E72_F493);
+    assert_eq!(image.read_u32(PayloadOffset(0x11)).unwrap(), 0xAB1B_4972);
+    assert_eq!(image.read_u32(PayloadOffset(0x15)).unwrap(), 0x335B_8A1A);
+    assert_ne!(&image.payload()[572_088..], &[0; 4]);
+
+    let output = image
+        .encode_patches(&[
+            patch(&image, fields::HEAD, 0x261C_4A52),
+            patch(&image, fields::BODY, 0xD346_1392),
+        ])
+        .unwrap();
+    let edited = SaveImage::decode(output.clone()).unwrap();
+    assert_eq!(edited.layout_id(), Some(LayoutId::Observed0107));
+    let mut expected = image.payload().to_vec();
+    expected[fields::HEAD.0..fields::HEAD.0 + 4].copy_from_slice(&0x261C_4A52u32.to_le_bytes());
+    expected[fields::BODY.0..fields::BODY.0 + 4].copy_from_slice(&0xD346_1392u32.to_le_bytes());
+    let checksum = inner_checksum(&expected);
+    expected[12..16].copy_from_slice(&checksum.to_le_bytes());
+    assert_eq!(edited.payload(), expected);
+    for index in 1..image.compressed_block_lengths().len() {
+        assert_eq!(
+            compressed_block(&output, index),
+            compressed_block(&raw, index)
+        );
+    }
+}
+
+fn container_for_payload(image: &SaveImage, mut payload: Vec<u8>) -> Vec<u8> {
+    let logical_size = payload.len();
+    payload[8..12].copy_from_slice(&(logical_size as u32).to_le_bytes());
+    let checksum = inner_checksum(&payload);
+    payload[12..16].copy_from_slice(&checksum.to_le_bytes());
+    payload.resize(logical_size.div_ceil(BLOCK_SIZE) * BLOCK_SIZE, 0);
+    let mut raw = image.raw()[..0x24].to_vec();
+    raw[0x14..0x18].copy_from_slice(&(logical_size as u32).to_le_bytes());
+    raw[0x1C..0x24].copy_from_slice(&(logical_size as u64).to_le_bytes());
+    for block in payload.chunks_exact(BLOCK_SIZE) {
+        let compressed = lz4_flex::block::compress(block);
+        raw.extend_from_slice(&(compressed.len() as u32).to_le_bytes());
+        raw.extend_from_slice(&compressed);
+    }
+    let stored_size = (raw.len() - 0x1C) as u32;
+    raw[0x10..0x14].copy_from_slice(&stored_size.to_le_bytes());
+    let checksum = crc32(&raw[0x10..]);
+    raw[0x0C..0x10].copy_from_slice(&checksum.to_le_bytes());
+    raw
 }
 
 fn patch(image: &SaveImage, offset: PayloadOffset, value: u32) -> FieldPatch {

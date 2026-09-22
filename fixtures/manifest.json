@@ -335,6 +335,37 @@
       "raw_size": 2524,
       "raw_sha256": "d2ef4bb0aa74aaccc41957cbe7dfc0e3138bb2b07e5560221a92dde1af866426",
       "reference_error": "Compressed block out of bounds"
+    },
+    {
+      "file": "valid_new_baseline.bin",
+      "synthetic": true,
+      "do_not_import_to_game": true,
+      "purpose": "Synthetic 0107 baseline with later-block and nonzero tail sentinels; no account/session data",
+      "expected": "valid",
+      "raw_size": 2584,
+      "raw_sha256": "86b63c1e3015f8d2fd768d54d0f0d20aee2ba95094cd0c84a6286a155d05002c",
+      "payload_sha256": "e1f5a06caf906de785803e76a84f0498dd192a764ac99094a11ad8265cdf7516",
+      "logical_size": 572092,
+      "inner_low32": "0x38E1EE89",
+      "outer_crc32": "0x055B2B93",
+      "known_writable_layout": true,
+      "head_id": "0x9F73133E",
+      "body_id": "0x5D0D8002",
+      "cape_id": "0x6E72F493",
+      "primary_id": "0xAB1B4972",
+      "secondary_id": "0x335B8A1A",
+      "compressed_block_lengths": [
+        311,
+        291,
+        267,
+        267,
+        267,
+        267,
+        267,
+        267,
+        308
+      ],
+      "changed_payload_ranges_vs_baseline": []
     }
   ]
 }

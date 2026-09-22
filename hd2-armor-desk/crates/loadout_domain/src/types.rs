@@ -32,6 +32,9 @@ pub enum ItemType {
     /// A primary weapon. It is catalogued for accuracy but cannot occupy armor slots.
     #[serde(rename = "primary_weapon")]
     PrimaryWeapon,
+    /// A secondary weapon, catalogued but never allowed in armor slots.
+    #[serde(rename = "secondary_weapon")]
+    SecondaryWeapon,
     /// A normal helmet.
     Helmet,
     /// A cape.
@@ -46,6 +49,7 @@ impl ItemType {
         match self {
             ItemType::Armor => "armor",
             ItemType::PrimaryWeapon => "primary_weapon",
+            ItemType::SecondaryWeapon => "secondary_weapon",
             ItemType::Helmet => "helmet",
             ItemType::Cape => "cape",
             ItemType::Unknown => "unknown",
@@ -57,6 +61,7 @@ impl ItemType {
         match self {
             ItemType::Armor => "身体护甲",
             ItemType::PrimaryWeapon => "主要武器",
+            ItemType::SecondaryWeapon => "副武器",
             ItemType::Helmet => "头盔",
             ItemType::Cape => "披风",
             ItemType::Unknown => "未知类型",

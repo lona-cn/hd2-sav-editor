@@ -640,12 +640,12 @@
       ]
     },
     {
-      "item_key": "unknown:0x335B8A1A",
+      "item_key": "secondary_weapon:0x335B8A1A",
       "id_u32": 861637146,
-      "item_type": "unknown",
+      "item_type": "secondary_weapon",
       "display_name": "GP-20 最后通牒",
       "aliases": [],
-      "classification": "unknown",
+      "classification": "user_verified",
       "favorite": false,
       "metadata": {},
       "observations": [

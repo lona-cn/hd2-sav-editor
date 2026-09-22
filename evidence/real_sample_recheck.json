@@ -36,5 +36,30 @@
       "source_unchanged": true,
       "private_sample_in_bundle": false
     }
+  ],
+  "additional_runs": [
+    {
+      "run_date": "2026-09-22",
+      "environment": "Windows 11 x64",
+      "scope": "Local Python/Rust memory-only roundtrips and isolated desktop read; no game writeback",
+      "sample_label": "testament_new.sav",
+      "raw_bytes": 7080,
+      "payload_bytes": 572092,
+      "header": "07010000b687e357bcba0800",
+      "inner_low32": "0xB44BA676",
+      "outer_crc32": "0xB2E4E0B3",
+      "head": "0x9F73133E",
+      "body": "0x5D0D8002",
+      "cape": "0x6E72F493",
+      "primary": "0xAB1B4972",
+      "secondary": "0x335B8A1A",
+      "known_layout": true,
+      "python_memory_edit_roundtrip": true,
+      "rust_head_and_body_memory_roundtrips": true,
+      "noop_byte_identical": true,
+      "source_unchanged": true,
+      "private_sample_in_fixtures": false,
+      "game_readback_tested": false
+    }
   ]
 }

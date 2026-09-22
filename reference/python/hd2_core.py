@@ -14,6 +14,7 @@ import time
 import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 import lz4.block
 
@@ -133,8 +134,17 @@ def decode(data: bytes, *, verify_inner: bool = True) -> Save:
     return Save(payload, tuple(compressed), tuple(full))
 
 
-KNOWN_HEADER = bytes.fromhex('060100003eeacea6b8ba0800')
-KNOWN_LENGTH = 572088
+class LayoutId(Enum):
+    OBSERVED_0106 = (bytes.fromhex('060100003eeacea6b8ba0800'), 572088)
+    OBSERVED_0107 = (bytes.fromhex('07010000b687e357bcba0800'), 572092)
+
+    @classmethod
+    def recognize(cls, payload: bytes) -> LayoutId | None:
+        for layout in cls:
+            header, length = layout.value
+            if len(payload) == length and payload[:12] == header:
+                return layout
+        return None
 
 
 def repack(original: bytes, payload: bytes) -> bytes:
@@ -186,8 +196,12 @@ class Snapshot:
         return cls(raw, decode(raw).payload, sha256(raw), stamp(), path)
 
     @property
+    def layout_id(self) -> LayoutId | None:
+        return LayoutId.recognize(self.payload)
+
+    @property
     def known_layout(self) -> bool:
-        return len(self.payload) == KNOWN_LENGTH and self.payload[:12] == KNOWN_HEADER
+        return self.layout_id is not None
 
 
 @dataclass(frozen=True)
@@ -201,11 +215,11 @@ class Field:
 
 
 DEFAULT_FIELDS = [
-    Field('头盔槽', 0x121, '用户换装验证'),
+    Field('头部槽', 0x121, '用户换装验证'),
     Field('身体护甲槽', 0x129, '样本及用户观察'),
     Field('披风槽', 0x125, '样本及用户观察'),
-    Field('未知字段 0x0011', 0x11, '待逐项点击验证'),
-    Field('未知字段 0x0015', 0x15, '待逐项点击验证'),
+    Field('主武器槽', 0x11, '新样本装备 ID 匹配'),
+    Field('副武器槽', 0x15, '新样本装备 ID 匹配'),
     Field('未知字段 0x0019', 0x19, '待逐项点击验证'),
     Field('战略配备记录 1', 0x1D, '历史数据匹配，当前用途待确认'),
     Field('战略配备记录 2', 0x25, '历史记录布局，当前用途待确认'),

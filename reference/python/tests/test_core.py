@@ -5,12 +5,15 @@ import lz4.block
 import hd2_core as c
 
 # Intentionally synthetic: contains no user, account or game-session data.
-def fixture(size=572088):
+def fixture(size=572088, header=None):
     p=bytearray(size)
     p[:8]=bytes.fromhex('060100003eeacea6')
     struct.pack_into('<I',p,8,size)
+    if header is not None:p[:12]=header
     for off, value in [(0x11,0x11223344),(0x121,0x056848E9),(0x125,0x4657CFB3),(0x129,0xD3461392)]:
         struct.pack_into('<I',p,off,value)
+    p[70000:70016]=bytes.fromhex('102132435465768798a9bacbdcedfe0f')
+    p[-36:]=bytes(range(0xA1,0xC5))
     p=c.refresh_inner_checksum(bytes(p))
     chunks=[]
     for i in range(0,len(p),65536):
@@ -84,6 +87,56 @@ class CodecTests(unittest.TestCase):
         a=c.Snapshot.from_bytes(c.repack(self.raw,bytes(p)))
         self.assertFalse(a.known_layout)
         with self.assertRaises(ValueError):c.Editor(a).stage_u32(0x121,3)
+    def test_both_layouts_preserve_source_and_opaque_bytes_on_edit(self):
+        for layout in c.LayoutId:
+            with self.subTest(layout=layout):
+                header,size=layout.value
+                raw=fixture(size,header);before=c.decode(raw)
+                snapshot=c.Snapshot.from_bytes(raw)
+                self.assertEqual(snapshot.layout_id,layout)
+                self.assertTrue(snapshot.known_layout)
+                editor=c.Editor(snapshot)
+                self.assertEqual(editor.build(),raw)
+                expected=bytearray(snapshot.payload)
+                for offset,value in [(0x121,0x9F73133E),(0x125,0x6E72F493),
+                                     (0x129,0x5D0D8002),(0x11,0xAB1B4972),(0x15,0x335B8A1A)]:
+                    editor.stage_u32(offset,value)
+                    struct.pack_into('<I',expected,offset,value)
+                result=c.decode(editor.build())
+                self.assertEqual(result.payload,c.refresh_inner_checksum(bytes(expected)))
+                self.assertEqual(result.compressed_blocks[1:],before.compressed_blocks[1:])
+                self.assertEqual(result.full_blocks[-1],before.full_blocks[-1])
+                self.assertEqual(snapshot.raw,raw)
+                self.assertEqual(snapshot.payload,before.payload)
+                self.assertEqual(c.Snapshot.from_bytes(editor.build()).layout_id,layout)
+    def test_mismatched_header_and_length_stays_readonly(self):
+        cases=[(572092,c.LayoutId.OBSERVED_0106.value[0]),
+               (572088,c.LayoutId.OBSERVED_0107.value[0]),
+               (572092,bytes.fromhex('08010000b687e357bcba0800'))]
+        with tempfile.TemporaryDirectory() as d:
+            catalog=c.Catalog(Path(d)/'catalog.json')
+            for size,header in cases:
+                with self.subTest(size=size,header=header):
+                    self.assertIsNone(c.LayoutId.recognize(header+bytes(size-12)))
+                    header=header[:8]+struct.pack('<I',size)
+                    snapshot=c.Snapshot.from_bytes(fixture(size,header))
+                    self.assertIsNone(snapshot.layout_id)
+                    self.assertFalse(snapshot.known_layout)
+                    editor=c.Editor(snapshot)
+                    with self.assertRaisesRegex(ValueError,'未知布局'):
+                        editor.stage_u32(0x121,3)
+                    self.assertEqual(editor.build(),snapshot.raw)
+                    self.assertEqual(catalog.observe(snapshot,c.DEFAULT_FIELDS),[])
+            self.assertEqual(catalog.records,{})
+    def test_catalog_observes_both_supported_layouts(self):
+        with tempfile.TemporaryDirectory() as d:
+            catalog=c.Catalog(Path(d)/'catalog.json')
+            for layout in c.LayoutId:
+                header,size=layout.value
+                snapshot=c.Snapshot.from_bytes(fixture(size,header))
+                catalog.observe(snapshot,[c.Field('head',0x121)])
+            record=catalog.records[catalog.key(0x121,0x056848E9)]
+            self.assertEqual(record['count'],2)
     def test_byte_diff_full_offsets(self):
         a=b'012345';b=b'01XX45'
         self.assertEqual(c.diff_ranges(a,b),[(2,4)])
