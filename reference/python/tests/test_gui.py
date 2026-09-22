@@ -130,20 +130,31 @@ if __name__=='__main__':unittest.main()
 
 @unittest.skipUnless(os.environ.get('DISPLAY') or os.name=='nt','GUI requires display')
 class PollTests(unittest.TestCase):
+    def wait_for_snapshot(self,root,app,expected):
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline:
+            root.update()
+            if app.latest is not None and app.latest.sha256==expected:return
+            time.sleep(.01)
+        self.fail(f'等待快照 {expected} 超时：{app.file_status.get()}')
+
     def test_manual_refresh_when_monitor_paused(self):
         with tempfile.TemporaryDirectory() as d:
             root=tk.Tk();app=sav_gui.App(root,Path(d)/'ws',start_poll=False)
             try:
                 f=Path(d)/'x.sav';raw=fixture();f.write_bytes(raw)
-                app.active_path=str(f);app.path_var.set(str(f));app.accept_snapshot(c.Snapshot.from_bytes(raw,str(f)))
+                # Exercise path normalization through the public open flow, including
+                # aliases such as Windows short temp paths or a lexical "..".
+                alias=Path(d)/'alias';alias.mkdir()
                 app.monitor.set(False);app.poll_ms.set('100')
+                app.open_path(str(alias/'..'/'x.sav'));app.tick()
+                self.wait_for_snapshot(root,app,c.sha256(raw))
                 p=bytearray(c.decode(raw).payload);struct.pack_into('<I',p,0x121,17)
                 changed=c.repack(raw,bytes(p));f.write_bytes(changed)
-                app.reload_now();app.tick()
-                deadline=time.monotonic()+2
-                while time.monotonic()<deadline and app.latest.sha256!=c.sha256(changed):
-                    root.update();time.sleep(.01)
-                self.assertEqual(app.latest.sha256,c.sha256(changed))
+                app.reload_now()
+                self.wait_for_snapshot(root,app,c.sha256(changed))
+                self.assertFalse(app.monitor.get())
+                self.assertEqual(f.read_bytes(),changed)
             finally:app.close_for_test()
     def test_monitor_reads_new_valid_file_after_partial_write(self):
         with tempfile.TemporaryDirectory() as d:
@@ -151,16 +162,12 @@ class PollTests(unittest.TestCase):
             try:
                 f=Path(d)/'x.sav';raw=fixture();f.write_bytes(raw)
                 app.poll_ms.set('100');app.open_path(str(f));app.tick()
-                deadline=time.monotonic()+3
-                while time.monotonic()<deadline and not app.latest:root.update();time.sleep(.01)
-                self.assertIsNotNone(app.latest)
+                self.wait_for_snapshot(root,app,c.sha256(raw))
                 f.write_bytes(raw[:50])
                 for _ in range(50):root.update();time.sleep(.01)
                 self.assertEqual(app.latest.sha256,c.sha256(raw))
                 p=bytearray(c.decode(raw).payload);struct.pack_into('<I',p,0x121,18)
                 changed=c.repack(raw,bytes(p));f.write_bytes(changed)
-                deadline=time.monotonic()+3
-                while time.monotonic()<deadline and app.latest.sha256!=c.sha256(changed):root.update();time.sleep(.01)
-                self.assertEqual(app.latest.sha256,c.sha256(changed))
+                self.wait_for_snapshot(root,app,c.sha256(changed))
                 self.assertIn(app.catalog.key(0x121,18),app.catalog.records)
             finally:app.close_for_test()
