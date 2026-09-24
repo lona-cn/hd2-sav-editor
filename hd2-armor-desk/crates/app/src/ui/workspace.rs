@@ -34,20 +34,20 @@ use super::state::{
     CandidateRow, CommitMode, StatusLine, TargetSlot,
 };
 
-const BG: u32 = 0x0B0E12;
-const CARD_BG: u32 = 0x12171E;
-const CARD_RAISED: u32 = 0x181F28;
-const CARD_BORDER: u32 = 0x2A333F;
-const TEXT: u32 = 0xEEF2F6;
-const MUTED: u32 = 0x929CAA;
-const SUBTLE: u32 = 0x657180;
-const ACCENT: u32 = 0xF4C542;
-const ACCENT_DIM: u32 = 0x342D17;
+const BG: u32 = 0x08151D;
+const CARD_BG: u32 = 0x10212A;
+const CARD_RAISED: u32 = 0x192F39;
+const CARD_BORDER: u32 = 0x30434C;
+const TEXT: u32 = 0xF1F3EE;
+const MUTED: u32 = 0xA5B4B9;
+const SUBTLE: u32 = 0x789098;
+const ACCENT: u32 = 0xFFE710;
+const ACCENT_DIM: u32 = 0x34371B;
 const DANGER: u32 = 0xF06B67;
 const DANGER_DIM: u32 = 0x321B1E;
 const OK: u32 = 0x65D49A;
 const OK_DIM: u32 = 0x173226;
-const INFO: u32 = 0x72A7FF;
+const INFO: u32 = 0x74BED0;
 
 type LegalAcknowledgementWriter = fn() -> std::io::Result<()>;
 
@@ -1467,36 +1467,50 @@ impl WorkspaceView {
             .gap_4()
             .px_5()
             .py_3()
-            .bg(rgb(CARD_BG))
-            .border_b_1()
-            .border_color(rgb(CARD_BORDER))
+            .bg(rgb(BG))
+            .border_b_2()
+            .border_color(rgb(ACCENT))
             .child(
                 div()
                     .flex()
                     .items_center()
-                    .gap_3()
+                    .gap_4()
                     .child(
                         div()
                             .flex()
                             .items_center()
                             .justify_center()
-                            .size(px(44.0))
-                            .rounded_lg()
+                            .w(px(48.0))
+                            .h(px(48.0))
                             .bg(rgb(ACCENT))
                             .text_color(rgb(BG))
-                            .child("AD"),
+                            .text_xl()
+                            .font_semibold()
+                            .child("II"),
                     )
                     .child(
                         div()
                             .flex()
                             .flex_col()
                             .gap_1()
-                            .child(div().text_xl().text_color(rgb(TEXT)).child("ARMOR DESK"))
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(ACCENT))
+                                    .child("SUPER EARTH  /  EQUIPMENT TERMINAL"),
+                            )
+                            .child(
+                                div()
+                                    .text_xl()
+                                    .font_semibold()
+                                    .text_color(rgb(TEXT))
+                                    .child("ARMOR DESK"),
+                            )
                             .child(
                                 div()
                                     .text_xs()
                                     .text_color(rgb(MUTED))
-                                    .child("HELLDIVERS 2 · 双甲配装控制台"),
+                                    .child("HELLDIVERS 2   ·   双甲配装控制台"),
                             ),
                     ),
             )
@@ -1511,7 +1525,8 @@ impl WorkspaceView {
                             .flex_col()
                             .items_end()
                             .gap_1()
-                            .child(div().text_sm().text_color(rgb(TEXT)).child(file_name))
+                            .child(div().text_xs().text_color(rgb(SUBTLE)).child("LOCAL SAVE  /  本机存档"))
+                            .child(div().text_sm().font_semibold().text_color(rgb(TEXT)).child(file_name))
                             .child(div().text_xs().text_color(rgb(MUTED)).child(file_meta)),
                     )
                     .when(dirty, |this| {
@@ -1599,11 +1614,11 @@ impl WorkspaceView {
             .flex_1()
             .flex()
             .flex_col()
-            .gap_3()
-            .p_4()
-            .rounded_lg()
+            .gap_4()
+            .p_5()
+            .rounded_sm()
             .bg(rgb(if selected_here { CARD_RAISED } else { CARD_BG }))
-            .border_2()
+            .border_1()
             .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
             .when(locked, |this| this.opacity(0.9))
             .child(
@@ -1621,10 +1636,13 @@ impl WorkspaceView {
                                     .flex()
                                     .items_center()
                                     .justify_center()
-                                    .size(px(38.0))
-                                    .rounded_md()
-                                    .bg(rgb(if selected_here { ACCENT_DIM } else { BG }))
+                                    .size(px(48.0))
+                                    .rounded_full()
+                                    .border_2()
+                                    .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
+                                    .bg(rgb(BG))
                                     .text_color(rgb(if selected_here { ACCENT } else { MUTED }))
+                                    .font_semibold()
                                     .child(slot_mark),
                             )
                             .child(
@@ -1632,9 +1650,8 @@ impl WorkspaceView {
                                     .flex()
                                     .flex_col()
                                     .gap_1()
-                                    .child(
-                                        div().text_base().text_color(rgb(TEXT)).child(slot_title),
-                                    )
+                                    .child(div().text_xs().text_color(rgb(if selected_here { ACCENT } else { SUBTLE })).child(format!("LOADOUT  /  {slot_number}")))
+                                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child(slot_title))
                                     .child(div().text_xs().text_color(rgb(MUTED)).child(sub_label)),
                             ),
                     )
@@ -1656,8 +1673,14 @@ impl WorkspaceView {
             )
             .child(
                 div()
-                    .min_h(px(44.0))
+                    .min_h(px(52.0))
+                    .px_3()
+                    .py_2()
+                    .bg(rgb(BG))
+                    .border_l_2()
+                    .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
                     .text_lg()
+                    .font_semibold()
                     .text_color(rgb(TEXT))
                     .child(label),
             )
@@ -1800,7 +1823,7 @@ impl WorkspaceView {
             .flex_col()
             .gap_3()
             .p_4()
-            .rounded_lg()
+            .rounded_sm()
             .bg(rgb(CARD_BG))
             .border_1()
             .border_color(rgb(CARD_BORDER))
@@ -1821,17 +1844,18 @@ impl WorkspaceView {
                                     .items_center()
                                     .justify_center()
                                     .size(px(34.0))
-                                    .rounded_md()
-                                    .bg(rgb(ACCENT_DIM))
-                                    .text_color(rgb(ACCENT))
-                                    .child("库"),
+                                    .bg(rgb(ACCENT))
+                                    .text_color(rgb(BG))
+                                    .font_semibold()
+                                    .child("A"),
                             )
                             .child(
                                 div()
                                     .flex()
                                     .flex_col()
                                     .gap_1()
-                                    .child(div().text_base().text_color(rgb(TEXT)).child("装备库"))
+                                    .child(div().text_xs().text_color(rgb(ACCENT)).child("ARMORY  /  装备数据库"))
+                                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("装备库"))
                                     .child(
                                         div()
                                             .text_xs()
@@ -1978,7 +2002,7 @@ impl WorkspaceView {
                             .gap_3()
                             .px_3()
                             .py_2()
-                            .rounded_md()
+                            .rounded_sm()
                             .bg(rgb(if selected { ACCENT_DIM } else { BG }))
                             .border_1()
                             .border_color(rgb(if selected { ACCENT } else { CARD_BORDER }))
@@ -2143,9 +2167,9 @@ impl WorkspaceView {
             .gap_2()
             .px_5()
             .py_3()
-            .bg(rgb(CARD_RAISED))
+            .bg(rgb(CARD_BG))
             .border_t_2()
-            .border_color(rgb(if dirty { ACCENT } else { CARD_BORDER }))
+            .border_color(rgb(if in_conflict { DANGER } else if dirty { ACCENT } else { CARD_BORDER }))
             .child(
                 div()
                     .flex()
@@ -2163,7 +2187,9 @@ impl WorkspaceView {
                                     .items_center()
                                     .justify_center()
                                     .size(px(36.0))
-                                    .rounded_md()
+                                    .rounded_full()
+                                    .border_2()
+                                    .border_color(rgb(state_color))
                                     .bg(rgb(if dirty { ACCENT_DIM } else { OK_DIM }))
                                     .text_color(rgb(state_color))
                                     .child(if dirty { "Δ" } else { "✓" }),
@@ -2181,8 +2207,9 @@ impl WorkspaceView {
                                             .child(
                                                 div()
                                                     .text_xs()
+                                                    .font_semibold()
                                                     .text_color(rgb(state_color))
-                                                    .child(state_label),
+                                                    .child(format!("SAVE STATUS  /  {state_label}")),
                                             )
                                             .child(
                                                 div()
@@ -2282,7 +2309,7 @@ impl WorkspaceView {
             .gap_3()
             .px_5()
             .py_2()
-            .bg(rgb(BG))
+            .bg(rgb(CARD_RAISED))
             .border_b_1()
             .border_color(rgb(CARD_BORDER))
             .child(
@@ -2291,8 +2318,8 @@ impl WorkspaceView {
                     .items_center()
                     .gap_1()
                     .p_1()
-                    .rounded_lg()
-                    .bg(rgb(CARD_BG))
+                    .rounded_sm()
+                    .bg(rgb(BG))
                     .child(
                         Button::new("open-save")
                             .label("打开存档")
@@ -2481,7 +2508,7 @@ impl WorkspaceView {
             .flex_col()
             .gap_3()
             .p_4()
-            .rounded_lg()
+            .rounded_sm()
             .bg(rgb(CARD_BG))
             .border_1()
             .border_color(rgb(CARD_BORDER))
@@ -2490,8 +2517,8 @@ impl WorkspaceView {
                     .flex()
                     .items_center()
                     .gap_2()
-                    .child(div().text_xs().text_color(rgb(ACCENT)).child("03"))
-                    .child(div().text_base().text_color(rgb(TEXT)).child("操作流程")),
+                    .child(div().text_xs().text_color(rgb(ACCENT)).child("MISSION  /  03"))
+                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("操作流程")),
             )
             .children(
                 steps
@@ -2758,16 +2785,17 @@ impl WorkspaceView {
         div()
             .flex()
             .items_center()
-            .gap_2()
+            .gap_3()
             .px_5()
             .py_2()
-            .bg(rgb(if error { DANGER_DIM } else { CARD_BG }))
+            .bg(rgb(if error { DANGER_DIM } else { BG }))
             .border_t_1()
             .border_color(rgb(if error { DANGER } else { CARD_BORDER }))
-            .child(div().text_xs().text_color(rgb(color)).child(if error {
-                "需要处理"
+            .child(div().w(px(7.0)).h(px(7.0)).rounded_full().bg(rgb(color)))
+            .child(div().text_xs().font_semibold().text_color(rgb(color)).child(if error {
+                "ALERT / 需要处理"
             } else {
-                "就绪"
+                "SYSTEM / 就绪"
             }))
             .child(div().w(px(1.0)).h(px(12.0)).bg(rgb(CARD_BORDER)))
             .child(
@@ -2803,7 +2831,7 @@ impl WorkspaceView {
             .flex_col()
             .gap_3()
             .p_4()
-            .rounded_lg()
+            .rounded_sm()
             .bg(rgb(CARD_BG))
             .border_1()
             .border_color(rgb(CARD_BORDER))
@@ -2817,8 +2845,8 @@ impl WorkspaceView {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child(div().text_xs().text_color(rgb(ACCENT)).child("P"))
-                            .child(div().text_base().text_color(rgb(TEXT)).child("快速预设")),
+                            .child(div().text_xs().text_color(rgb(ACCENT)).child("ARCHIVE  /  P"))
+                            .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("快速预设")),
                     )
                     .child(
                         div()
@@ -2915,6 +2943,15 @@ impl Render for WorkspaceView {
                     .flex_col()
                     .gap_4()
                     .p_5()
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap_3()
+                            .child(div().w(px(28.0)).h(px(2.0)).bg(rgb(ACCENT)))
+                            .child(div().text_xs().text_color(rgb(ACCENT)).child("DEPLOYMENT  /  双甲配装"))
+                            .child(div().flex_1().h(px(1.0)).bg(rgb(CARD_BORDER))),
+                    )
                     .child(
                         div()
                             .flex()

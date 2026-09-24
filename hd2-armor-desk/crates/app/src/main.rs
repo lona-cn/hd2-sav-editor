@@ -31,8 +31,8 @@ fn main() {
         cx.spawn(async move |cx| {
             // Explicit origin: no display query needed before the window exists.
             let bounds = Bounds {
-                origin: point(px(120.0), px(80.0)),
-                size: size(px(1360.0), px(860.0)),
+                origin: point(px(32.0), px(24.0)),
+                size: size(px(1200.0), px(680.0)),
             };
             cx.open_window(
                 WindowOptions {

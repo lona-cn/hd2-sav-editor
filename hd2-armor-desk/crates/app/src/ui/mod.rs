@@ -6,54 +6,53 @@ pub mod workspace;
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{px, rgb, App};
 
-/// Apply the application-owned dark command-console palette to every GPUI Kit
-/// component, including dialogs, inputs, buttons and focus rings.
+/// Keep GPUI Kit controls in the same tactical palette as the workspace.
 pub fn configure_theme(cx: &mut App) {
     {
         let theme = Theme::global_mut(cx);
         theme.mode = ThemeMode::Dark;
         theme.font_family = "Bahnschrift".into();
         theme.mono_font_family = "Cascadia Mono".into();
-        theme.font_size = px(15.0);
-        theme.mono_font_size = px(13.0);
-        theme.radius = px(6.0);
-        theme.radius_lg = px(10.0);
+        theme.font_size = px(14.0);
+        theme.mono_font_size = px(12.0);
+        theme.radius = px(3.0);
+        theme.radius_lg = px(4.0);
         theme.shadow = true;
 
-        theme.background = rgb(0x0B0E12).into();
-        theme.foreground = rgb(0xEEF2F6).into();
-        theme.border = rgb(0x2A333F).into();
-        theme.input = rgb(0x2A333F).into();
-        theme.muted = rgb(0x171D25).into();
-        theme.muted_foreground = rgb(0x929CAA).into();
-        theme.popover = rgb(0x151A22).into();
-        theme.popover_foreground = rgb(0xEEF2F6).into();
-        theme.secondary = rgb(0x202731).into();
-        theme.secondary_hover = rgb(0x2A333F).into();
-        theme.secondary_active = rgb(0x151A20).into();
-        theme.secondary_foreground = rgb(0xE9EDF2).into();
-        theme.selection = rgb(0x4A3D16).into();
-        theme.scrollbar = rgb(0x0B0E12).into();
-        theme.scrollbar_thumb = rgb(0x35404E).into();
-        theme.scrollbar_thumb_hover = rgb(0x4A5666).into();
+        theme.background = rgb(0x08151D).into();
+        theme.foreground = rgb(0xF1F3EE).into();
+        theme.border = rgb(0x30434C).into();
+        theme.input = rgb(0x30434C).into();
+        theme.muted = rgb(0x11232D).into();
+        theme.muted_foreground = rgb(0xA5B4B9).into();
+        theme.popover = rgb(0x10212A).into();
+        theme.popover_foreground = rgb(0xF1F3EE).into();
+        theme.secondary = rgb(0x1A303A).into();
+        theme.secondary_hover = rgb(0x29424C).into();
+        theme.secondary_active = rgb(0x10232C).into();
+        theme.secondary_foreground = rgb(0xF1F3EE).into();
+        theme.selection = rgb(0x4E4818).into();
+        theme.scrollbar = rgb(0x08151D).into();
+        theme.scrollbar_thumb = rgb(0x34505A).into();
+        theme.scrollbar_thumb_hover = rgb(0x51707A).into();
 
-        theme.primary = rgb(0xF4C542).into();
-        theme.primary_hover = rgb(0xFFD760).into();
-        theme.primary_active = rgb(0xD9AA2A).into();
-        theme.primary_foreground = rgb(0x111318).into();
+        theme.primary = rgb(0xFFE710).into();
+        theme.primary_hover = rgb(0xFFF166).into();
+        theme.primary_active = rgb(0xD6C500).into();
+        theme.primary_foreground = rgb(0x101A1C).into();
         theme.button_primary = theme.primary;
         theme.button_primary_hover = theme.primary_hover;
         theme.button_primary_active = theme.primary_active;
         theme.button_primary_foreground = theme.primary_foreground;
 
-        theme.button = rgb(0x202731).into();
-        theme.button_hover = rgb(0x2A333F).into();
-        theme.button_active = rgb(0x151A20).into();
-        theme.button_foreground = rgb(0xE9EDF2).into();
-        theme.button_secondary = rgb(0x202731).into();
-        theme.button_secondary_hover = rgb(0x2A333F).into();
-        theme.button_secondary_active = rgb(0x151A20).into();
-        theme.button_secondary_foreground = rgb(0xE9EDF2).into();
+        theme.button = rgb(0x1A303A).into();
+        theme.button_hover = rgb(0x29424C).into();
+        theme.button_active = rgb(0x10232C).into();
+        theme.button_foreground = rgb(0xF1F3EE).into();
+        theme.button_secondary = rgb(0x1A303A).into();
+        theme.button_secondary_hover = rgb(0x29424C).into();
+        theme.button_secondary_active = rgb(0x10232C).into();
+        theme.button_secondary_foreground = rgb(0xF1F3EE).into();
 
         theme.success = rgb(0x65D49A).into();
         theme.success_foreground = rgb(0x09120D).into();
@@ -63,8 +62,8 @@ pub fn configure_theme(cx: &mut App) {
         theme.button_success_hover = theme.success_hover;
         theme.button_success_active = theme.success_active;
         theme.button_success_foreground = theme.success_foreground;
-        theme.warning = rgb(0xF4C542).into();
-        theme.warning_foreground = rgb(0x111318).into();
+        theme.warning = rgb(0xFFE710).into();
+        theme.warning_foreground = rgb(0x101A1C).into();
         theme.danger = rgb(0xF06B67).into();
         theme.danger_foreground = rgb(0x170809).into();
         theme.danger_hover = rgb(0xFF7C78).into();
@@ -73,12 +72,12 @@ pub fn configure_theme(cx: &mut App) {
         theme.button_danger_hover = theme.danger_hover;
         theme.button_danger_active = theme.danger_active;
         theme.button_danger_foreground = theme.danger_foreground;
-        theme.info = rgb(0x72A7FF).into();
-        theme.info_foreground = rgb(0x08101D).into();
-        theme.ring = rgb(0xF4C542).into();
-        theme.link = rgb(0xF4C542).into();
-        theme.link_hover = rgb(0xFFD760).into();
-        theme.link_active = rgb(0xD9AA2A).into();
+        theme.info = rgb(0x74BED0).into();
+        theme.info_foreground = rgb(0x08151D).into();
+        theme.ring = rgb(0xFFE710).into();
+        theme.link = rgb(0xFFE710).into();
+        theme.link_hover = rgb(0xFFF166).into();
+        theme.link_active = rgb(0xD6C500).into();
 
         // GPUI Kit components paint backgrounds from resolved tokens while
         // foregrounds still read the legacy fields. Keep both projections in
