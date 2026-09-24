@@ -14,6 +14,7 @@ path = "src/main.rs"
 sav_codec.workspace = true
 loadout_domain.workspace = true
 local_io.workspace = true
+hd2-updater.workspace = true
 gpui-kit = { version = "0.6.4" }
 rfd = { version = "0.15.3", default-features = false }
 open = "5.4.4"

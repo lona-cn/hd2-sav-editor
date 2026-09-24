@@ -53,7 +53,7 @@ Windows 上的 HELLDIVERS 2 存档双甲配置工具。用 Rust + GPUI 实现，
 | 恢复整份备份 | 列出 `backups\` 中的备份并整体恢复（范围比"恢复普通头盔"大得多） |
 | 保存为预设 | 把当前的头部/身体意图存成预设（只存意图，不存存档内容） |
 | 诊断信息 | 展开路径、长度、两层校验值等排查信息 |
-| 检查更新 | 读取本项目最新 GitHub Release；可下载并校验 Windows x64 ZIP，失败时可打开 Releases 页面 |
+| 检查更新 | 点击下载后自动下载并校验；无未保存草稿时自动安装并重启，失败时可打开 Releases 页面 |
 
 ### 两个槽位卡片
 
@@ -139,7 +139,7 @@ Windows 上的 HELLDIVERS 2 存档双甲配置工具。用 Rust + GPUI 实现，
 
 ```powershell
 cd hd2-armor-desk
-cargo build --release --locked     # 产出 target\release\hd2-armor-desk.exe
+cargo build --workspace --release --locked  # 产出主程序与 hd2-armor-desk-updater.exe
 cargo test --workspace --locked    # 全部测试
 cargo clippy --workspace --all-targets --locked
 cargo fmt --check
@@ -274,12 +274,13 @@ Windows 桌面上实际启动重建后的程序，并用合成存档完成：
 ## 10. 隐私
 
 - 程序不上传存档或其他本机数据，也不扫描整盘；仅在用户点击“检查更新”后访问本项目的
-  GitHub Release API，并按用户确认下载发布包。
+  GitHub Release API，并在用户点击下载后取得发布包。
 - 只在软件可执行文件旁的 `workspace\` 目录中读写自己的目录、预设和备份，
-  不向 `%LOCALAPPDATA%` 写入文件。
+  不向 `%LOCALAPPDATA%` 写入文件；更新器不修改 `workspace\`。
 - 监视模式只读取你选定的那一个文件。
 - 诊断信息只显示路径、长度和校验值，不含存档原始内容。
-- 更新包只有在大小与 SHA-256 均匹配 GitHub Release 元数据后才会保留。
+- 发布包只有在大小与 SHA-256 均匹配 GitHub Release 元数据后才会安装；失败时会尝试回滚，
+  若回滚也失败则保留备份与暂存区供恢复。
 
 ---
 

@@ -1111,6 +1111,89 @@ fn update_failures_offer_a_releases_page_fallback(cx: &mut TestAppContext) {
         cx.debug_bounds("update-open-releases").is_some(),
         "下载失败时仍应提供 Releases 页面按钮"
     );
+
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.update_state =
+                hd2_armor_desk::update::UpdateState::InstallFailed("权限不足".to_string());
+            cx.notify();
+        });
+    });
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("update-open-releases").is_some(),
+        "安装失败时应提供 Releases 页面按钮"
+    );
+}
+
+#[gpui_kit::test]
+fn update_install_waits_for_unsaved_draft_to_be_resolved(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    open(&view, &mut cx, "valid_baseline.bin");
+
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.head_query = "0x01C2A674".to_string();
+                cx.notify();
+            });
+        });
+    });
+    cx.simulate_resize(size(px(1280.0), px(1800.0)));
+    click(&mut cx, "pick-armor:0x01C2A674");
+
+    let release = hd2_armor_desk::update::ReleaseInfo {
+        tag: "release-20260921-120000000-UTC8".to_string(),
+        name: "HD2 Armor Desk 20260921-120000000-UTC8".to_string(),
+        page_url: hd2_armor_desk::update::RELEASES_PAGE_URL.to_string(),
+        package: hd2_armor_desk::update::ReleasePackage {
+            name: "package.zip".to_string(),
+            download_url: "https://github.com/lona-cn/hd2-sav-editor/releases/download/package.zip"
+                .to_string(),
+            size: 1,
+            digest: Some(format!("sha256:{}", "a".repeat(64))),
+        },
+    };
+    let receipt = hd2_armor_desk::update::DownloadReceipt {
+        path: PathBuf::from("staged/package.zip"),
+        transaction_dir: PathBuf::from("staged"),
+        bytes: 1,
+        sha256: "a".repeat(64),
+    };
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.update_state =
+                    hd2_armor_desk::update::UpdateState::Downloaded(release, receipt);
+                state.status = hd2_armor_desk::ui::state::StatusLine::info("downloaded");
+                cx.notify();
+            });
+        });
+    });
+    render(&mut cx);
+    assert!(
+        cx.debug_bounds("update-install").is_some(),
+        "已下载更新应显示安装按钮"
+    );
+    click(&mut cx, "update-install");
+
+    let (update_state, status) = cx.update(|_, cx| {
+        let state = view.read(cx).state().read(cx);
+        (state.update_state.clone(), state.status.clone())
+    });
+    assert!(
+        matches!(
+            update_state,
+            hd2_armor_desk::update::UpdateState::Downloaded(_, _)
+        ),
+        "有未保存草稿时不应启动安装"
+    );
+    assert_eq!(
+        status.text, "downloaded",
+        "未保存草稿时安装按钮应禁用，而不是只在启动后拒绝"
+    );
 }
 
 #[gpui_kit::test]

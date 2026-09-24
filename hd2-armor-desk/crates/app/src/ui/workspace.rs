@@ -352,41 +352,105 @@ impl WorkspaceView {
         .detach();
     }
 
-    fn start_update_download(
-        &mut self,
-        release: ReleaseInfo,
-        destination: PathBuf,
-        cx: &mut Context<Self>,
-    ) {
-        let release_for_task = release.clone();
-        self.state.update(cx, |state, cx| {
+    fn start_update_download(&mut self, release: ReleaseInfo, cx: &mut Context<Self>) {
+        let should_start = self.state.update(cx, |state, cx| {
+            if state.update_state.is_busy() {
+                return false;
+            }
+            if state.save_in_flight || state.is_dirty() {
+                state.status =
+                    StatusLine::error("请先完成写回并保存或放弃未保存修改，再安装更新".to_string());
+                cx.notify();
+                return false;
+            }
             state.status = StatusLine::info(format!("正在下载并校验 {}…", release.package.name));
-            state.update_state = UpdateState::Downloading(release);
+            state.update_state = UpdateState::Downloading(release.clone());
             cx.notify();
+            true
         });
-        let task = cx.background_spawn(async move {
-            update::download_release_to(&release_for_task, &destination)
-        });
+        if !should_start {
+            return;
+        }
+
+        let release_for_task = release.clone();
+        let task = cx.background_spawn(async move { update::download_release(&release_for_task) });
         cx.spawn(async move |view, cx| {
             let result = task.await;
             let _ = view.update(cx, |view, cx| {
-                view.state.update(cx, |state, cx| {
-                    match result {
-                        Ok(receipt) => {
-                            state.status = StatusLine::info(format!(
-                                "更新包已下载并通过 SHA-256 校验：{}",
-                                receipt.path.display()
-                            ));
-                            state.update_state = UpdateState::Downloaded(receipt);
-                        }
-                        Err(message) => {
-                            state.status = StatusLine::error(format!("下载更新失败：{message}"));
-                            state.update_state = UpdateState::DownloadFailed(message);
-                        }
+                let receipt_to_install = view.state.update(cx, |state, cx| match result {
+                    Ok(receipt) => {
+                        let can_install = !state.save_in_flight && !state.is_dirty();
+                        state.status = StatusLine::info(if can_install {
+                            "下载和 SHA-256 校验完成，正在准备安装…".to_string()
+                        } else {
+                            "下载完成。请先保存或放弃未保存修改，再安装并重启".to_string()
+                        });
+                        state.update_state =
+                            UpdateState::Downloaded(release.clone(), receipt.clone());
+                        cx.notify();
+                        can_install.then_some(receipt)
                     }
-                    cx.notify();
+                    Err(message) => {
+                        state.status = StatusLine::error(format!("下载更新失败：{message}"));
+                        state.update_state = UpdateState::DownloadFailed(message);
+                        cx.notify();
+                        None
+                    }
                 });
+                if let Some(receipt) = receipt_to_install {
+                    view.start_update_install(release.clone(), receipt, cx);
+                }
             });
+        })
+        .detach();
+    }
+
+    fn start_update_install(
+        &mut self,
+        release: ReleaseInfo,
+        receipt: update::DownloadReceipt,
+        cx: &mut Context<Self>,
+    ) {
+        let should_start = self.state.update(cx, |state, cx| {
+            if state.save_in_flight || state.is_dirty() {
+                state.status = StatusLine::error(
+                    "更新包已下载；请先完成写回并保存或放弃未保存修改".to_string(),
+                );
+                cx.notify();
+                return false;
+            }
+            let matches_download = matches!(
+                &state.update_state,
+                UpdateState::Downloaded(current, current_receipt)
+                    if current.tag == release.tag && current_receipt.path == receipt.path
+            );
+            if !matches_download {
+                return false;
+            }
+            state.status = StatusLine::info("正在准备更新程序，完成后将自动重启…".to_string());
+            state.update_state = UpdateState::Installing(release.clone());
+            cx.notify();
+            true
+        });
+        if !should_start {
+            return;
+        }
+
+        let release_for_task = release.clone();
+        let task = cx.background_spawn(async move {
+            update::launch_update_helper(&release_for_task, &receipt)
+        });
+        cx.spawn(async move |view, cx| match task.await {
+            Ok(()) => std::process::exit(0),
+            Err(message) => {
+                let _ = view.update(cx, |view, cx| {
+                    view.state.update(cx, |state, cx| {
+                        state.status = StatusLine::error(format!("安装更新失败：{message}"));
+                        state.update_state = UpdateState::InstallFailed(message);
+                        cx.notify();
+                    });
+                });
+            }
         })
         .detach();
     }
@@ -1271,7 +1335,13 @@ impl WorkspaceView {
     // ----------------------------------------------------------------- render
 
     fn render_update_banner(&self, cx: &mut Context<Self>) -> Div {
-        let update_state = self.state.read(cx).update_state.clone();
+        let (update_state, can_install) = {
+            let state = self.state.read(cx);
+            (
+                state.update_state.clone(),
+                !state.save_in_flight && !state.is_dirty(),
+            )
+        };
         let base = || {
             div()
                 .flex()
@@ -1327,7 +1397,6 @@ impl WorkspaceView {
                 )
                 .child(dismiss_button(cx)),
             UpdateState::Available(release) => {
-                let package_name = release.package.name.clone();
                 let release_for_download = release.clone();
                 base()
                     .child(div().text_sm().text_color(rgb(ACCENT)).child("发现新版本"))
@@ -1348,19 +1417,7 @@ impl WorkspaceView {
                             .label("下载 ZIP")
                             .primary()
                             .on_click(cx.listener(move |view, _, _, cx| {
-                                let Some(destination) = rfd::FileDialog::new()
-                                    .set_title("保存最新 HD2 Armor Desk 发布包")
-                                    .set_file_name(&package_name)
-                                    .add_filter("ZIP 发布包", &["zip"])
-                                    .save_file()
-                                else {
-                                    return;
-                                };
-                                view.start_update_download(
-                                    release_for_download.clone(),
-                                    destination,
-                                    cx,
-                                );
+                                view.start_update_download(release_for_download.clone(), cx);
                             })),
                     )
                     .child(releases_button(cx))
@@ -1379,21 +1436,51 @@ impl WorkspaceView {
                         .text_color(rgb(MUTED))
                         .child(release.package.name),
                 ),
-            UpdateState::Downloaded(receipt) => base()
+            UpdateState::Downloaded(release, receipt) => {
+                let release_for_install = release.clone();
+                let receipt_for_install = receipt.clone();
+                base()
+                    .child(div().text_sm().text_color(rgb(OK)).child(if can_install {
+                        "下载完成，SHA-256 校验通过"
+                    } else {
+                        "已下载并校验；保存或放弃未保存修改后可安装"
+                    }))
+                    .child(
+                        div()
+                            .flex_1()
+                            .text_xs()
+                            .text_color(rgb(MUTED))
+                            .child(format!("{} · {}", release.tag, receipt.path.display())),
+                    )
+                    .child(
+                        Button::new("install-update")
+                            .debug_selector(|| "update-install".into())
+                            .label("安装并重启")
+                            .primary()
+                            .when(!can_install, |button| button.disabled(true))
+                            .on_click(cx.listener(move |view, _, _, cx| {
+                                view.start_update_install(
+                                    release_for_install.clone(),
+                                    receipt_for_install.clone(),
+                                    cx,
+                                );
+                            })),
+                    )
+            }
+            UpdateState::Installing(release) => base()
                 .child(
                     div()
                         .text_sm()
-                        .text_color(rgb(OK))
-                        .child("下载完成，SHA-256 校验通过"),
+                        .text_color(rgb(ACCENT))
+                        .child("正在安装更新并准备重启…"),
                 )
                 .child(
                     div()
                         .flex_1()
                         .text_xs()
                         .text_color(rgb(MUTED))
-                        .child(receipt.path.display().to_string()),
-                )
-                .child(dismiss_button(cx)),
+                        .child(release.tag),
+                ),
             UpdateState::CheckFailed(message) => base()
                 .border_color(rgb(DANGER))
                 .child(
@@ -1418,6 +1505,23 @@ impl WorkspaceView {
                         .text_sm()
                         .text_color(rgb(DANGER))
                         .child("下载更新失败"),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .text_xs()
+                        .text_color(rgb(TEXT))
+                        .child(message),
+                )
+                .child(releases_button(cx))
+                .child(dismiss_button(cx)),
+            UpdateState::InstallFailed(message) => base()
+                .border_color(rgb(DANGER))
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(DANGER))
+                        .child("安装更新失败"),
                 )
                 .child(
                     div()
@@ -1525,8 +1629,19 @@ impl WorkspaceView {
                             .flex_col()
                             .items_end()
                             .gap_1()
-                            .child(div().text_xs().text_color(rgb(SUBTLE)).child("LOCAL SAVE  /  本机存档"))
-                            .child(div().text_sm().font_semibold().text_color(rgb(TEXT)).child(file_name))
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(SUBTLE))
+                                    .child("LOCAL SAVE  /  本机存档"),
+                            )
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_semibold()
+                                    .text_color(rgb(TEXT))
+                                    .child(file_name),
+                            )
                             .child(div().text_xs().text_color(rgb(MUTED)).child(file_meta)),
                     )
                     .when(dirty, |this| {
@@ -1639,7 +1754,11 @@ impl WorkspaceView {
                                     .size(px(48.0))
                                     .rounded_full()
                                     .border_2()
-                                    .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
+                                    .border_color(rgb(if selected_here {
+                                        ACCENT
+                                    } else {
+                                        CARD_BORDER
+                                    }))
                                     .bg(rgb(BG))
                                     .text_color(rgb(if selected_here { ACCENT } else { MUTED }))
                                     .font_semibold()
@@ -1650,8 +1769,23 @@ impl WorkspaceView {
                                     .flex()
                                     .flex_col()
                                     .gap_1()
-                                    .child(div().text_xs().text_color(rgb(if selected_here { ACCENT } else { SUBTLE })).child(format!("LOADOUT  /  {slot_number}")))
-                                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child(slot_title))
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(if selected_here {
+                                                ACCENT
+                                            } else {
+                                                SUBTLE
+                                            }))
+                                            .child(format!("LOADOUT  /  {slot_number}")),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_base()
+                                            .font_semibold()
+                                            .text_color(rgb(TEXT))
+                                            .child(slot_title),
+                                    )
                                     .child(div().text_xs().text_color(rgb(MUTED)).child(sub_label)),
                             ),
                     )
@@ -1854,8 +1988,19 @@ impl WorkspaceView {
                                     .flex()
                                     .flex_col()
                                     .gap_1()
-                                    .child(div().text_xs().text_color(rgb(ACCENT)).child("ARMORY  /  装备数据库"))
-                                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("装备库"))
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(ACCENT))
+                                            .child("ARMORY  /  装备数据库"),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_base()
+                                            .font_semibold()
+                                            .text_color(rgb(TEXT))
+                                            .child("装备库"),
+                                    )
                                     .child(
                                         div()
                                             .text_xs()
@@ -2517,8 +2662,19 @@ impl WorkspaceView {
                     .flex()
                     .items_center()
                     .gap_2()
-                    .child(div().text_xs().text_color(rgb(ACCENT)).child("MISSION  /  03"))
-                    .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("操作流程")),
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(rgb(ACCENT))
+                            .child("MISSION  /  03"),
+                    )
+                    .child(
+                        div()
+                            .text_base()
+                            .font_semibold()
+                            .text_color(rgb(TEXT))
+                            .child("操作流程"),
+                    ),
             )
             .children(
                 steps
@@ -2792,11 +2948,17 @@ impl WorkspaceView {
             .border_t_1()
             .border_color(rgb(if error { DANGER } else { CARD_BORDER }))
             .child(div().w(px(7.0)).h(px(7.0)).rounded_full().bg(rgb(color)))
-            .child(div().text_xs().font_semibold().text_color(rgb(color)).child(if error {
-                "ALERT / 需要处理"
-            } else {
-                "SYSTEM / 就绪"
-            }))
+            .child(
+                div()
+                    .text_xs()
+                    .font_semibold()
+                    .text_color(rgb(color))
+                    .child(if error {
+                        "ALERT / 需要处理"
+                    } else {
+                        "SYSTEM / 就绪"
+                    }),
+            )
             .child(div().w(px(1.0)).h(px(12.0)).bg(rgb(CARD_BORDER)))
             .child(
                 div()
@@ -2845,8 +3007,19 @@ impl WorkspaceView {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child(div().text_xs().text_color(rgb(ACCENT)).child("ARCHIVE  /  P"))
-                            .child(div().text_base().font_semibold().text_color(rgb(TEXT)).child("快速预设")),
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(ACCENT))
+                                    .child("ARCHIVE  /  P"),
+                            )
+                            .child(
+                                div()
+                                    .text_base()
+                                    .font_semibold()
+                                    .text_color(rgb(TEXT))
+                                    .child("快速预设"),
+                            ),
                     )
                     .child(
                         div()
@@ -2949,7 +3122,12 @@ impl Render for WorkspaceView {
                             .items_center()
                             .gap_3()
                             .child(div().w(px(28.0)).h(px(2.0)).bg(rgb(ACCENT)))
-                            .child(div().text_xs().text_color(rgb(ACCENT)).child("DEPLOYMENT  /  双甲配装"))
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(ACCENT))
+                                    .child("DEPLOYMENT  /  双甲配装"),
+                            )
                             .child(div().flex_1().h(px(1.0)).bg(rgb(CARD_BORDER))),
                     )
                     .child(

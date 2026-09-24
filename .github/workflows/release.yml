@@ -112,7 +112,7 @@ jobs:
         shell: pwsh
         env:
           HD2_RELEASE_TAG: ${{ steps.version.outputs.tag }}
-        run: cargo build -p hd2-armor-desk --release --locked
+        run: cargo build -p hd2-armor-desk -p hd2-updater --release --locked
 
       - name: Package Windows release
         shell: pwsh
@@ -123,6 +123,10 @@ jobs:
           $binary = Join-Path $env:GITHUB_WORKSPACE "hd2-armor-desk\target\release\hd2-armor-desk.exe"
           if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
             throw "Release executable was not produced: $binary"
+          }
+          $updater = Join-Path $env:GITHUB_WORKSPACE "hd2-armor-desk\target\release\hd2-armor-desk-updater.exe"
+          if (-not (Test-Path -LiteralPath $updater -PathType Leaf)) {
+            throw "Release updater was not produced: $updater"
           }
 
           $packageName = "hd2-armor-desk-windows-x64-$env:RELEASE_VERSION"
@@ -136,6 +140,7 @@ jobs:
           $imageDir = Join-Path $packageDir "docs\images"
           New-Item -ItemType Directory -Path $imageDir -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination $packageDir
+          Copy-Item -LiteralPath $updater -Destination $packageDir
           Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "README.md") -Destination $packageDir
           Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "LICENSE") -Destination $packageDir
           Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "docs\images\armor-desk-overview.png") -Destination $imageDir
@@ -148,7 +153,29 @@ jobs:
           Branch: $env:GITHUB_REF_NAME
           "@ | Set-Content -LiteralPath (Join-Path $packageDir "VERSION.txt") -Encoding utf8
 
-          Compress-Archive -Path (Join-Path $packageDir "*") -DestinationPath $archive -CompressionLevel Optimal
+          Add-Type -AssemblyName System.IO.Compression
+          $zipStream = [IO.File]::Open($archive, [IO.FileMode]::CreateNew, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+          try {
+            $zip = [System.IO.Compression.ZipArchive]::new($zipStream, [System.IO.Compression.ZipArchiveMode]::Create, $false)
+            try {
+              foreach ($file in Get-ChildItem -LiteralPath $packageDir -File -Recurse) {
+                $entryName = $file.FullName.Substring($packageDir.Length + 1).Replace('\', '/')
+                $entry = $zip.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+                $source = [IO.File]::OpenRead($file.FullName)
+                $target = $entry.Open()
+                try {
+                  $source.CopyTo($target)
+                } finally {
+                  $target.Dispose()
+                  $source.Dispose()
+                }
+              }
+            } finally {
+              $zip.Dispose()
+            }
+          } finally {
+            $zipStream.Dispose()
+          }
           $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath $checksumFile -Encoding ascii
 
@@ -206,6 +233,8 @@ jobs:
           - 平台：Windows x64
 
           下载 ZIP 发布包，并使用同名 .sha256 文件核对完整性。
+          发布包包含主程序与独立更新器。点击程序内“检查更新”并下载后，更新器会校验、安装并重启程序；
+          程序旁的 workspace 用户数据不会被更新器覆盖。尚未内置更新器的旧版本需要手动安装一次此版本。
           "@ | Set-Content -LiteralPath $notesFile -Encoding utf8
 
           $arguments = @(

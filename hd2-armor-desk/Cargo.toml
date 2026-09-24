@@ -4,6 +4,7 @@ members = [
     "crates/sav_codec",
     "crates/loadout_domain",
     "crates/local_io",
+    "crates/updater",
     "crates/app",
 ]
 
@@ -16,6 +17,7 @@ license = "MIT"
 sav_codec = { path = "crates/sav_codec" }
 loadout_domain = { path = "crates/loadout_domain" }
 local_io = { path = "crates/local_io" }
+hd2-updater = { path = "crates/updater" }
 
 lz4_flex = { version = "0.11.3", default-features = false, features = ["std"] }
 crc32fast = "1.4.2"
@@ -24,6 +26,7 @@ serde_json = { version = "1.0.140", features = ["preserve_order"] }
 csv = "1.3.1"
 sha2 = "0.10.8"
 thiserror = "2.0.12"
+zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
 
 [profile.release]
 opt-level = 3

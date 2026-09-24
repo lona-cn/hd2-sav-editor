@@ -57,18 +57,21 @@ Valve 或 HELLDIVERS 2 的其他权利方没有隶属、授权或背书关系。
 
 ## 获取程序
 
-从本仓库的 [GitHub Releases](https://github.com/lona-cn/hd2-sav-editor/releases) 下载 Windows x64
-发布包；优先选择最新稳定版本，并核对发布条目提供的校验值。不要使用来源不明的二次打包。
-如果 Releases 暂无可下载文件，请按文末步骤自行从源码构建。
+首次安装，或从尚未内置更新器的旧版本迁移时，从 [GitHub Releases](https://github.com/lona-cn/hd2-sav-editor/releases)
+下载 Windows x64 ZIP，核对同名 `.sha256` 文件并完整解压到可写目录。首个内置更新器的版本必须手动安装一次；
+之后可在程序内更新。不要使用来源不明的二次打包。Releases 暂无可下载文件时，请按文末步骤自行从源码构建。
 
 推送或合并到 `main` / `master` 后，GitHub Actions 会在 Windows 环境运行测试并构建发布版；
 全部成功后自动创建并标记最新 Release。版本号直接使用 UTC+8 构建时间，不采用 SemVer，
 格式为 `yyyyMMdd-HHmmssfff-UTC8`（例如 `20260920-093015123-UTC8`）。每个 Release 提供
 Windows x64 ZIP 发布包及对应的 SHA-256 校验文件。
 
-程序顶部的“检查更新”会读取本项目最新 Release。发现新版本后可直接下载 Windows x64 ZIP；
-下载内容必须与 GitHub API 提供的 SHA-256 一致才会保留。检查或下载失败时，界面会提供
-“打开 Releases 页面”按钮，便于改用浏览器下载。
+程序顶部的“检查更新”会读取本项目最新 Release。点击“下载 ZIP”后，程序把发布包自动下载到
+当前程序目录下的受控暂存区，并核对 GitHub API 提供的 SHA-256。下载完成且没有未保存草稿或写回任务时，
+程序会自动解包、事务式替换主程序和发布文件，并重启；更新器不改动旁边的 `workspace\` 用户数据。
+如果下载期间出现未保存草稿，安装会等待你保存或放弃修改。网络、校验或安装失败时会显示错误并提供
+“打开 Releases 页面”按钮；安装过程会尝试回滚旧版本，若回滚也失败则保留备份和暂存区供恢复。
+安装目录必须可写；请勿在 ZIP 内直接运行。
 
 ## 系统要求
 
