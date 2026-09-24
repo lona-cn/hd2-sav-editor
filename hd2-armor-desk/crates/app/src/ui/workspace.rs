@@ -25,7 +25,7 @@ use gpui_kit::{
     InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
     StatefulInteractiveElement as _, Styled as _, Subscription, Window,
 };
-use loadout_domain::{HumanReadableDiff, ItemType, LoadoutIntent, SlotIntent, Snapshot};
+use loadout_domain::{HumanReadableDiff, ItemRef, ItemType, LoadoutIntent, SlotIntent, Snapshot};
 
 use super::state::{
     apply_import, format_bytes, list_backups, player_usable, preset_from_draft, slot_accepts,
@@ -633,6 +633,33 @@ impl WorkspaceView {
                 }
             }
             state.status = StatusLine::info("选择已更新，查看下方改动预览".to_string());
+            state.refresh_diff();
+            cx.notify();
+        });
+    }
+    /// Copy the current body-slot ID to the head as a body armor target.
+    fn copy_body_id_to_head(&mut self, cx: &mut Context<Self>) {
+        self.state.update(cx, |state, cx| {
+            let Some(body_id) = state.current_body_id() else {
+                state.status = StatusLine::error("当前没有可复制的身体护甲 ID".to_string());
+                cx.notify();
+                return;
+            };
+            let Some(draft) = state.draft.as_mut() else {
+                state.status = StatusLine::error("请先打开一个存档".to_string());
+                cx.notify();
+                return;
+            };
+
+            let item = ItemRef {
+                item_key: format!("{}:0x{body_id:08X}", ItemType::Armor.key_prefix()),
+                id_u32: body_id,
+                item_type: ItemType::Armor,
+                label_snapshot: format!("身体护甲 ID · 0x{body_id:08X}"),
+            };
+            draft.set_head(item, format!("复制身体护甲 0x{body_id:08X} 到头部"));
+            state.status =
+                StatusLine::info(format!("已将身体护甲 ID 0x{body_id:08X} 设为头部目标"));
             state.refresh_diff();
             cx.notify();
         });
@@ -1716,6 +1743,8 @@ impl WorkspaceView {
         let selected_here = state.target_slot == slot;
         let locked = !is_head && state.body_locked();
         let has_selection = item_key.is_some();
+        let body_id = state.current_body_id();
+
         let slot_title = if is_head {
             "头部槽位"
         } else {
@@ -1877,6 +1906,17 @@ impl WorkspaceView {
                                         state.refresh_diff();
                                         cx.notify();
                                     });
+                                })),
+                        )
+                    })
+                    .when(!is_head && body_id.is_some(), |this| {
+                        this.child(
+                            Button::new("copy-body-id-to-head")
+                                .debug_selector(|| "action-copy-body-id-to-head".into())
+                                .label("复制身体 ID 到头部")
+                                .tooltip("将当前身体护甲 ID 直接设为头部，目录外的 ID 也可使用")
+                                .on_click(cx.listener(|view, _, _, cx| {
+                                    view.copy_body_id_to_head(cx);
                                 })),
                         )
                     })

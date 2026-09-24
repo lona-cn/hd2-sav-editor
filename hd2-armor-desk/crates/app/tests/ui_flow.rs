@@ -17,7 +17,7 @@ use gpui_kit::{
     point, px, size, AppContext as _, Modifiers, MouseButton, TestAppContext, VisualTestContext,
 };
 use hd2_armor_desk::ui::{configure_theme, state::AppState, WorkspaceView};
-use loadout_domain::{Catalog, Classification, Item, ItemType};
+use loadout_domain::{Catalog, Classification, Item, ItemRef, ItemType};
 use local_io::Workspace;
 use sav_codec::{fields, SaveImage};
 
@@ -230,6 +230,75 @@ fn collected_body_armor_can_be_selected_for_the_head_slot(cx: &mut TestAppContex
         !status.is_error,
         "目录中的护甲应可被普通模式选择：{status:?}"
     );
+}
+
+#[gpui_kit::test]
+fn body_id_copy_sets_unrecorded_body_id_as_head(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    open(&view, &mut cx, "valid_baseline.bin");
+
+    // The saved body ID is not represented in the catalog.
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.catalog = Catalog::default();
+                cx.notify();
+            });
+        });
+    });
+    click(&mut cx, "action-copy-body-id-to-head");
+
+    let (head_id, body_id, head_type, catalog_empty, status) = cx.update(|_, cx| {
+        let state = view.read(cx).state().read(cx);
+        let intent = state.draft.as_ref().unwrap().intent();
+        (
+            intent.head.target_id(),
+            intent.body.target_id(),
+            intent.head_item_type(),
+            state.catalog.items().is_empty(),
+            state.status.clone(),
+        )
+    });
+    assert!(catalog_empty, "无目录记录仍应能直接设定头部 ID");
+    assert_eq!(head_id, Some(0xD346_1392));
+    assert_eq!(body_id, None, "复制操作不应改动身体槽位草稿");
+    assert_eq!(head_type, Some(ItemType::Armor));
+    assert!(!status.is_error, "设置失败：{status:?}");
+
+    // A pending body choice is the current body ID and takes precedence over disk.
+    let pending_body_id = 0xAABB_CCDD;
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state
+                    .draft
+                    .as_mut()
+                    .unwrap()
+                    .set_body(
+                        ItemRef {
+                            item_key: format!("armor:0x{pending_body_id:08X}"),
+                            id_u32: pending_body_id,
+                            item_type: ItemType::Armor,
+                            label_snapshot: "目录外身体护甲".into(),
+                        },
+                        "选择目录外护甲",
+                    )
+                    .unwrap();
+                state.refresh_diff();
+                cx.notify();
+            });
+        });
+    });
+    click(&mut cx, "action-copy-body-id-to-head");
+
+    let (head_id, body_id) = cx.update(|_, cx| {
+        let state = view.read(cx).state().read(cx);
+        let intent = state.draft.as_ref().unwrap().intent();
+        (intent.head.target_id(), intent.body.target_id())
+    });
+    assert_eq!(head_id, Some(pending_body_id));
+    assert_eq!(body_id, Some(pending_body_id), "身体槽位的待选值应保持不变");
 }
 
 #[gpui_kit::test]

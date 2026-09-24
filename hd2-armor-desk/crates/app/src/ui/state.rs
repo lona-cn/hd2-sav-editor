@@ -293,6 +293,13 @@ impl AppState {
     pub fn body_label(&self) -> String {
         self.slot_label(TargetSlot::Body)
     }
+    /// Current body-slot ID, preferring an in-progress body choice over the save.
+    pub(crate) fn current_body_id(&self) -> Option<u32> {
+        self.draft
+            .as_ref()
+            .and_then(|draft| draft.intent().body.target_id())
+            .or_else(|| self.snapshot.as_ref().and_then(Snapshot::body_id))
+    }
 
     fn slot_label(&self, slot: TargetSlot) -> String {
         let (intent, disk_id, prefer) = match slot {
