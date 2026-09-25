@@ -1305,6 +1305,48 @@ fn update_failures_offer_a_releases_page_fallback(cx: &mut TestAppContext) {
 }
 
 #[gpui_kit::test]
+fn update_download_banner_shows_live_progress(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    let release = hd2_armor_desk::update::ReleaseInfo {
+        tag: "release-20260921-120000000-UTC8".to_string(),
+        name: "HD2 Armor Desk 20260921-120000000-UTC8".to_string(),
+        page_url: hd2_armor_desk::update::RELEASES_PAGE_URL.to_string(),
+        package: hd2_armor_desk::update::ReleasePackage {
+            name: "package.zip".to_string(),
+            download_url: "https://github.com/lona-cn/hd2-sav-editor/releases/download/package.zip"
+                .to_string(),
+            size: 100,
+            digest: Some(format!("sha256:{}", "a".repeat(64))),
+        },
+    };
+    cx.update(|_, cx| {
+        view.update(cx, |view, cx| {
+            view.state().update(cx, |state, cx| {
+                state.update_state = hd2_armor_desk::update::UpdateState::Downloading(release, 37);
+                cx.notify();
+            });
+        });
+    });
+    render(&mut cx);
+
+    let track = cx
+        .debug_bounds("update-download-progress")
+        .expect("下载进度条轨道应渲染");
+    let fill = cx
+        .debug_bounds("update-download-progress-fill")
+        .expect("下载进度条填充应渲染");
+    assert!(
+        fill.size.width > px(0.0) && fill.size.width < track.size.width,
+        "37% 的进度应显示为非空且未满的填充"
+    );
+    assert!(
+        cx.debug_bounds("update-download-percent").is_some(),
+        "进度条应显示精确百分比"
+    );
+}
+
+#[gpui_kit::test]
 fn update_install_waits_for_unsaved_draft_to_be_resolved(cx: &mut TestAppContext) {
     let _env = ScratchEnv::install();
     let (view, mut cx) = build(cx);

@@ -2,6 +2,16 @@
 
 本文件只记录**实际运行过**的结果。未运行的项目明确写为 NOT RUN，不用推断代替。
 
+## 下载更新实时进度条
+
+| 验证 | 实际结果 |
+|---|---|
+| `cargo test -p hd2-armor-desk --test ui_flow update_download_banner_shows_live_progress --locked` | 1 passed，0 failed；界面测试确认 37% 时进度条有非空的部分填充，并显示百分比 |
+| `cargo test -p hd2-armor-desk --lib update::tests::downloads_the_package_only_after_its_sha256_matches --locked` | 1 passed，0 failed；下载回调报告已接收字节并最终到达包声明的完整大小 |
+| `cargo fmt -- --check` | 通过 |
+
+下载线程在每次写入数据后记录已接收字节数，界面每 100 ms 刷新一次；进度显示文件大小、百分比与使用应用强调色的进度条。
+
 ## 2026-09-25：装备库滚轮隔离
 
 | 验证 | 实际结果 |

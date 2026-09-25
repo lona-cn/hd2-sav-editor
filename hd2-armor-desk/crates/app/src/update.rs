@@ -58,7 +58,7 @@ pub enum UpdateState {
     Checking,
     UpToDate(ReleaseInfo),
     Available(ReleaseInfo),
-    Downloading(ReleaseInfo),
+    Downloading(ReleaseInfo, u64),
     Downloaded(ReleaseInfo, DownloadReceipt),
     Installing(ReleaseInfo),
     CheckFailed(String),
@@ -71,7 +71,7 @@ impl UpdateState {
         matches!(
             self,
             UpdateState::Checking
-                | UpdateState::Downloading(_)
+                | UpdateState::Downloading(_, _)
                 | UpdateState::Downloaded(_, _)
                 | UpdateState::Installing(_)
         )
@@ -112,18 +112,26 @@ pub struct DownloadReceipt {
 }
 
 pub fn download_release(release: &ReleaseInfo) -> Result<DownloadReceipt, String> {
+    download_release_with_progress(release, |_| {})
+}
+
+pub(crate) fn download_release_with_progress(
+    release: &ReleaseInfo,
+    mut on_progress: impl FnMut(u64),
+) -> Result<DownloadReceipt, String> {
     validate_release_urls(release)?;
     let executable =
         std::env::current_exe().map_err(|error| format!("无法定位当前程序：{error}"))?;
     let install_dir = executable
         .parent()
         .ok_or_else(|| "当前程序路径没有父目录".to_string())?;
-    download_release_in(release, install_dir)
+    download_release_in(release, install_dir, &mut on_progress)
 }
 
 fn download_release_in(
     release: &ReleaseInfo,
     install_dir: &Path,
+    on_progress: &mut impl FnMut(u64),
 ) -> Result<DownloadReceipt, String> {
     let install_dir = install_dir
         .canonicalize()
@@ -144,7 +152,7 @@ fn download_release_in(
     drop(lock);
 
     let destination = transaction_dir.join("package.zip");
-    match download_release_to_inner(release, &destination) {
+    match download_release_to_inner_with_progress(release, &destination, on_progress) {
         Ok(mut receipt) => {
             receipt.transaction_dir = transaction_dir;
             Ok(receipt)
@@ -253,9 +261,10 @@ fn validate_release_urls(release: &ReleaseInfo) -> Result<(), String> {
     Ok(())
 }
 
-fn download_release_to_inner(
+fn download_release_to_inner_with_progress(
     release: &ReleaseInfo,
     destination: &Path,
+    on_progress: &mut impl FnMut(u64),
 ) -> Result<DownloadReceipt, String> {
     if release.package.size == 0 || release.package.size > MAX_RELEASE_BYTES {
         return Err(format!(
@@ -326,6 +335,7 @@ fn download_release_to_inner(
                 .write_all(&buffer[..count])
                 .map_err(|error| format!("写入临时下载文件失败：{error}"))?;
             hasher.update(&buffer[..count]);
+            on_progress(bytes);
         }
         target
             .sync_all()
@@ -406,8 +416,8 @@ mod tests {
     use std::thread;
 
     use super::{
-        check_for_update_at, download_release_to_inner, ReleaseInfo, ReleasePackage, UpdateCheck,
-        RELEASES_PAGE_URL,
+        check_for_update_at, download_release_to_inner_with_progress, ReleaseInfo, ReleasePackage,
+        UpdateCheck, RELEASES_PAGE_URL,
     };
 
     fn serve_json(body: &'static str) -> (String, thread::JoinHandle<()>) {
@@ -547,7 +557,11 @@ mod tests {
         ));
         let _ = std::fs::remove_file(&destination);
 
-        let receipt = download_release_to_inner(&release, &destination)
+        let mut progress = Vec::new();
+        let receipt =
+            download_release_to_inner_with_progress(&release, &destination, &mut |bytes| {
+                progress.push(bytes)
+            })
             .expect("verified download should succeed");
         server.join().expect("test server should finish");
 
@@ -557,6 +571,11 @@ mod tests {
             "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
         );
         assert_eq!(receipt.bytes, 5);
+        assert_eq!(progress.last(), Some(&receipt.bytes));
+        assert!(
+            progress.windows(2).all(|updates| updates[0] < updates[1]),
+            "download byte progress should move forward"
+        );
         std::fs::remove_file(destination).unwrap();
     }
 
@@ -585,7 +604,7 @@ mod tests {
         let _ = std::fs::remove_file(&destination);
         let _ = std::fs::remove_file(&part_path);
 
-        let result = download_release_to_inner(&release, &destination);
+        let result = download_release_to_inner_with_progress(&release, &destination, &mut |_| {});
         server.join().expect("test server should finish");
 
         assert!(result.is_err());

@@ -8,6 +8,9 @@
 //! * `window.spawn` is used when a dialog needs the window for notifications.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::Duration;
 
 use crate::legal::{self, NOTICE_INTRO, NOTICE_RESPONSIBILITY, NOTICE_SAVE_RISK, NOTICE_TITLE};
 use crate::update::{
@@ -21,8 +24,8 @@ use gpui_kit::component::notification::Notification;
 use gpui_kit::component::Root;
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::{
-    div, prelude::FluentBuilder as _, px, rgb, App, AppContext as _, Context, Div, Entity,
-    InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
+    div, prelude::FluentBuilder as _, px, relative, rgb, App, AppContext as _, Context, Div,
+    Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
     StatefulInteractiveElement as _, Styled as _, Subscription, Window,
 };
 use loadout_domain::{HumanReadableDiff, ItemRef, ItemType, LoadoutIntent, SlotIntent, Snapshot};
@@ -364,7 +367,7 @@ impl WorkspaceView {
                 return false;
             }
             state.status = StatusLine::info(format!("正在下载并校验 {}…", release.package.name));
-            state.update_state = UpdateState::Downloading(release.clone());
+            state.update_state = UpdateState::Downloading(release.clone(), 0);
             cx.notify();
             true
         });
@@ -372,9 +375,40 @@ impl WorkspaceView {
             return;
         }
 
+        let progress_bytes = Arc::new(AtomicU64::new(0));
+        let download_finished = Arc::new(AtomicBool::new(false));
+        let progress_for_download = Arc::clone(&progress_bytes);
+        let finished_for_download = Arc::clone(&download_finished);
         let release_for_task = release.clone();
-        let task = cx.background_spawn(async move { update::download_release(&release_for_task) });
+        let task = cx.background_spawn(async move {
+            let result = update::download_release_with_progress(&release_for_task, |bytes| {
+                progress_for_download.store(bytes, Ordering::Relaxed);
+            });
+            finished_for_download.store(true, Ordering::Release);
+            result
+        });
         cx.spawn(async move |view, cx| {
+            loop {
+                if download_finished.load(Ordering::Acquire) {
+                    break;
+                }
+                cx.background_executor()
+                    .timer(Duration::from_millis(100))
+                    .await;
+                let downloaded_bytes = progress_bytes.load(Ordering::Relaxed);
+                let _ = view.update(cx, |view, cx| {
+                    view.state.update(cx, |state, cx| {
+                        if let UpdateState::Downloading(current, received) = &mut state.update_state
+                        {
+                            if current.tag == release.tag && *received != downloaded_bytes {
+                                *received = downloaded_bytes;
+                                cx.notify();
+                            }
+                        }
+                    });
+                });
+            }
+
             let result = task.await;
             let _ = view.update(cx, |view, cx| {
                 let receipt_to_install = view.state.update(cx, |state, cx| match result {
@@ -1450,19 +1484,58 @@ impl WorkspaceView {
                     .child(releases_button(cx))
                     .child(dismiss_button(cx))
             }
-            UpdateState::Downloading(release) => base()
-                .child(
-                    div()
-                        .text_sm()
-                        .text_color(rgb(ACCENT))
-                        .child("正在下载并校验…"),
-                )
-                .child(
-                    div()
-                        .text_xs()
-                        .text_color(rgb(MUTED))
-                        .child(release.package.name),
-                ),
+            UpdateState::Downloading(release, received) => {
+                let total = release.package.size;
+                let downloaded = received.min(total);
+                let percent = downloaded.saturating_mul(100) / total.max(1);
+                base()
+                    .flex_col()
+                    .items_stretch()
+                    .gap_2()
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap_3()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .text_color(rgb(ACCENT))
+                                    .child("正在下载并校验…"),
+                            )
+                            .child(div().flex_1())
+                            .child(
+                                div()
+                                    .debug_selector(|| "update-download-percent".into())
+                                    .text_sm()
+                                    .text_color(rgb(ACCENT))
+                                    .child(format!("{percent}%")),
+                            ),
+                    )
+                    .child(div().text_xs().text_color(rgb(MUTED)).child(format!(
+                        "{} / {} · {}",
+                        format_bytes(downloaded),
+                        format_bytes(total),
+                        release.package.name
+                    )))
+                    .child(
+                        div()
+                            .debug_selector(|| "update-download-progress".into())
+                            .flex()
+                            .w_full()
+                            .h(px(6.0))
+                            .rounded_full()
+                            .bg(rgb(CARD_BORDER))
+                            .child(
+                                div()
+                                    .debug_selector(|| "update-download-progress-fill".into())
+                                    .w(relative(percent as f32 / 100.0))
+                                    .h_full()
+                                    .rounded_full()
+                                    .bg(rgb(ACCENT)),
+                            ),
+                    )
+            }
             UpdateState::Downloaded(release, receipt) => {
                 let release_for_install = release.clone();
                 let receipt_for_install = receipt.clone();
