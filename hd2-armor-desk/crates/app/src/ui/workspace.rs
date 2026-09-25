@@ -2142,11 +2142,13 @@ impl WorkspaceView {
             .child(
                 div()
                     .id("browser-list")
+                    .debug_selector(|| "armor-browser-list".into())
                     .flex()
                     .flex_col()
                     .gap_1()
                     .max_h(px(360.0))
                     .overflow_y_scroll()
+                    .on_scroll_wheel(|_, _, cx| cx.stop_propagation())
                     .when(empty, |this| {
                         this.child(
                             div()
@@ -3150,6 +3152,7 @@ impl Render for WorkspaceView {
             .child(
                 div()
                     .id("main-scroll")
+                    .debug_selector(|| "main-scroll-viewport".into())
                     .flex_1()
                     .overflow_y_scroll()
                     .flex()
@@ -3158,6 +3161,7 @@ impl Render for WorkspaceView {
                     .p_5()
                     .child(
                         div()
+                            .debug_selector(|| "main-scroll-anchor".into())
                             .flex()
                             .items_center()
                             .gap_3()

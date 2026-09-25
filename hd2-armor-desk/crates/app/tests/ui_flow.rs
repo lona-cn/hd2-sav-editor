@@ -1,22 +1,25 @@
 //! UI interaction tests.
 //!
 //! These build the real `WorkspaceView` inside GPUI's headless test app and
-//! dispatch real pointer events at rendered elements, so the click handlers in
-//! `workspace.rs` are exercised rather than assumed to work.
+//! dispatch real pointer and wheel events at rendered elements, so the view's
+//! click and scroll handlers are exercised rather than assumed to work.
 //!
 //! Scope note: this file covers view state transitions (slot selection, body
-//! lock, button enablement, watcher toggling, never writing to a watched file).
-//! File dialogs and the save transaction are covered by the `local_io`
-//! integration tests, which drive the same functions without a window.
+//! lock, button enablement, watcher toggling, never writing to a watched file)
+//! and nested browser scrolling. File dialogs and the save transaction are
+//! covered by the `local_io` integration tests, which drive the same functions
+//! without a window.
 
 use std::path::{Path, PathBuf};
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::test::TestWindowExt as _;
 use gpui_kit::{
-    point, px, size, AppContext as _, Modifiers, MouseButton, TestAppContext, VisualTestContext,
+    point, px, size, AppContext as _, Modifiers, MouseButton, Pixels, ScrollDelta,
+    ScrollWheelEvent, TestAppContext, VisualTestContext,
 };
 use hd2_armor_desk::ui::{configure_theme, state::AppState, WorkspaceView};
+
 use loadout_domain::{Catalog, Classification, Item, ItemRef, ItemType};
 use local_io::Workspace;
 use sav_codec::{fields, SaveImage};
@@ -176,6 +179,17 @@ fn click(cx: &mut VisualTestContext, selector: &'static str) {
     );
     cx.simulate_mouse_move(center, None, Modifiers::default());
     cx.simulate_click(center, Modifiers::default());
+    cx.run_until_parked();
+}
+
+/// Dispatch a downward wheel event through GPUI's real event path.
+fn scroll_wheel(cx: &mut VisualTestContext, position: gpui_kit::Point<Pixels>, delta_y: f32) {
+    cx.simulate_mouse_move(position, None, Modifiers::default());
+    cx.simulate_event(ScrollWheelEvent {
+        position,
+        delta: ScrollDelta::Pixels(point(px(0.0), px(delta_y))),
+        ..Default::default()
+    });
     cx.run_until_parked();
 }
 
@@ -835,6 +849,100 @@ fn browser_renders_armor_passive_details(cx: &mut TestAppContext) {
         cx.debug_bounds("passive-description-armor:0xD3461392")
             .is_some(),
         "装备库条目应显示被动效果"
+    );
+}
+
+#[gpui_kit::test]
+fn scrolling_inside_browser_does_not_scroll_the_main_page(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (_, mut cx) = build(cx);
+    cx.simulate_resize(size(px(1280.0), px(900.0)));
+    render(&mut cx);
+
+    let viewport_bounds = cx
+        .debug_bounds("main-scroll-viewport")
+        .expect("主滚动区应进入实际布局");
+    let page_anchor_before = cx
+        .debug_bounds("main-scroll-anchor")
+        .expect("主滚动区应显示部署标题");
+    let center = |bounds: gpui_kit::Bounds<Pixels>| {
+        point(
+            bounds.origin.x + bounds.size.width / 2.0,
+            bounds.origin.y + bounds.size.height / 2.0,
+        )
+    };
+
+    scroll_wheel(&mut cx, center(page_anchor_before), -10.0);
+    render(&mut cx);
+
+    let page_anchor_after_first_scroll = cx
+        .debug_bounds("main-scroll-anchor")
+        .expect("主滚动区标题应仍在布局中");
+    assert!(
+        page_anchor_after_first_scroll.origin.y < page_anchor_before.origin.y,
+        "测试前置滚动应先移动外层页面"
+    );
+    scroll_wheel(&mut cx, center(page_anchor_after_first_scroll), -10.0);
+    render(&mut cx);
+
+    let page_anchor_before_list_scroll = cx
+        .debug_bounds("main-scroll-anchor")
+        .expect("主滚动区标题应仍在布局中");
+    assert!(
+        page_anchor_before_list_scroll.origin.y < page_anchor_after_first_scroll.origin.y,
+        "外层页面应在列表滚动前仍有可滚动距离"
+    );
+
+    let list_bounds = cx
+        .debug_bounds("armor-browser-list")
+        .expect("装备库列表应进入实际布局");
+    let item_before = cx
+        .debug_bounds("passive-name-armor:0xD3461392")
+        .expect("内置 FS-55 护甲应进入列表布局");
+    let list_visible_top = if list_bounds.origin.y < viewport_bounds.origin.y {
+        viewport_bounds.origin.y
+    } else {
+        list_bounds.origin.y
+    };
+    let list_scroll_y = list_visible_top + px(10.0);
+    let list_bottom = list_bounds.origin.y + list_bounds.size.height;
+    let viewport_bottom = viewport_bounds.origin.y + viewport_bounds.size.height;
+    assert!(
+        list_scroll_y < list_bottom && list_scroll_y < viewport_bottom,
+        "缩小窗口后，装备库列表仍应有可滚动的可见区域"
+    );
+    let list_scroll_position = point(
+        list_bounds.origin.x + list_bounds.size.width / 2.0,
+        list_scroll_y,
+    );
+
+    scroll_wheel(&mut cx, list_scroll_position, -10.0);
+    render(&mut cx);
+
+    let item_after = cx
+        .debug_bounds("passive-name-armor:0xD3461392")
+        .expect("FS-55 护甲应继续保留布局信息");
+    let page_anchor_after_list_scroll = cx
+        .debug_bounds("main-scroll-anchor")
+        .expect("主滚动区标题应仍在布局中");
+    assert!(
+        item_after.origin.y < item_before.origin.y,
+        "列表内滚轮应移动装备条目"
+    );
+    assert_eq!(
+        page_anchor_after_list_scroll.origin.y, page_anchor_before_list_scroll.origin.y,
+        "鼠标位于装备列表时，外层页面不应跟随滚动"
+    );
+
+    scroll_wheel(&mut cx, center(page_anchor_after_list_scroll), -10.0);
+    render(&mut cx);
+
+    let page_anchor_after_page_scroll = cx
+        .debug_bounds("main-scroll-anchor")
+        .expect("主滚动区标题应仍在布局中");
+    assert!(
+        page_anchor_after_page_scroll.origin.y < page_anchor_after_list_scroll.origin.y,
+        "鼠标移出列表后，外层页面仍应继续滚动"
     );
 }
 

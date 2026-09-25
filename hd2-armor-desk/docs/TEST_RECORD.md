@@ -2,6 +2,16 @@
 
 本文件只记录**实际运行过**的结果。未运行的项目明确写为 NOT RUN，不用推断代替。
 
+## 2026-09-25：装备库滚轮隔离
+
+| 验证 | 实际结果 |
+|---|---|
+| `cargo test -p hd2-armor-desk --test ui_flow scrolling_inside_browser_does_not_scroll_the_main_page --locked` | 1 passed，0 failed；`ui_flow` 的 28 个测试中运行 1 个，过滤 27 个 |
+| `cargo test --workspace --locked` | 138 passed，20 个测试套件，0 failed |
+| `cargo fmt -- --check` | 通过 |
+
+该测试先连续滚动主内容区，确认页面锚点移动，再在装备库列表的可见区域派发滚轮事件，验证条目移动而页面锚点保持不变；最后在列表外滚动确认主页面仍可继续移动。列表区域滚轮由内层消费；列表到边界后需将鼠标移出列表才能滚主页面。
+
 ## CI #8 失败修复：暂停监视后的手动刷新
 
 远端运行 `35738473632` 的 Python 步骤在 `test_manual_refresh_when_monitor_paused` 中
