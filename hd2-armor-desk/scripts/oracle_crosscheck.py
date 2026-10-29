@@ -1,9 +1,9 @@
 """Development-only bidirectional oracle for both observed save layouts.
 
 From hd2-armor-desk, CI must run these steps in order:
-    cargo test -p sav_codec --test oracle emit_rust_outputs_for_python_oracle
+    cargo test -p sav_codec --test oracle emit_rust_outputs_for_python_oracle --profile ci --locked
     python scripts/oracle_crosscheck.py target/oracle
-    HD2_REQUIRE_PYTHON_ORACLE=1 cargo test -p sav_codec --test oracle python_repacked_bytes_decode_identically
+    HD2_REQUIRE_PYTHON_ORACLE=1 cargo test -p sav_codec --test oracle python_repacked_bytes_decode_identically --profile ci --locked
 
 The last line uses POSIX environment syntax. In PowerShell first set
 $env:HD2_REQUIRE_PYTHON_ORACLE = '1', then run the cargo command. Presence of this

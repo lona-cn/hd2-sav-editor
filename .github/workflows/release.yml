@@ -16,17 +16,21 @@ jobs:
     concurrency:
       group: release-test-${{ github.ref }}
       cancel-in-progress: true
-    env:
-      CARGO_PROFILE_TEST_DEBUG: 0
 
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select pinned Rust toolchain
+      - name: Install isolated pinned Rust toolchain
         working-directory: hd2-armor-desk
         shell: pwsh
         run: |
+          $env:RUSTUP_HOME = Join-Path $env:RUNNER_TEMP "hd2-rustup"
+          "RUSTUP_HOME=$env:RUSTUP_HOME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          rustup toolchain install --no-self-update
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install the pinned Rust toolchain."
+          }
           rustup show active-toolchain
           rustc --version
           cargo --version
@@ -54,7 +58,7 @@ jobs:
       - name: Run tests
         working-directory: hd2-armor-desk
         shell: pwsh
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --profile ci --locked
 
       - name: Cross-check Rust outputs and emit Python outputs
         working-directory: hd2-armor-desk
@@ -66,7 +70,7 @@ jobs:
         shell: pwsh
         env:
           HD2_REQUIRE_PYTHON_ORACLE: '1'
-        run: cargo test -p sav_codec --test oracle --locked
+        run: cargo test -p sav_codec --test oracle --profile ci --locked
 
   build:
     name: Build Windows release
@@ -83,10 +87,16 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select pinned Rust toolchain
+      - name: Install isolated pinned Rust toolchain
         working-directory: hd2-armor-desk
         shell: pwsh
         run: |
+          $env:RUSTUP_HOME = Join-Path $env:RUNNER_TEMP "hd2-rustup"
+          "RUSTUP_HOME=$env:RUSTUP_HOME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          rustup toolchain install --no-self-update
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install the pinned Rust toolchain."
+          }
           rustup show active-toolchain
           rustc --version
           cargo --version

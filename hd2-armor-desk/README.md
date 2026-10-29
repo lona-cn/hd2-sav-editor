@@ -146,6 +146,16 @@ cargo fmt --check
 依赖版本固定在 `Cargo.lock`，Rust 工具链固定在 `rust-toolchain.toml`（stable）。
 UI 层使用 `gpui-kit 0.6.4`（重导出 GPUI 与组件库），具体版本见 `Cargo.toml`。
 
+### CI 测试配置
+
+CI 使用 `cargo test --workspace --profile ci --locked` 运行全部测试；该配置关闭测试产物及依赖的优化、
+调试符号和增量编译，保留开发模式的断言与溢出检查。本地默认 `dev` / `test` 和正式 `release` 优化不变。
+下方双向互验命令也使用 `ci` 配置，避免切回默认配置后重复编译。
+
+Windows CI 在独立的 `RUSTUP_HOME` 中按 `rust-toolchain.toml` 安装唯一工具链，再恢复依赖缓存，
+避免 runner 预装的其他 Rust 版本改变缓存指纹。测试与发布构建仍并行执行，二者成功后才发布。
+GitHub 仍会清理超过 7 天未访问的缓存；长期不提交后的首次运行仍可能需要冷编译。
+
 ### 新旧布局与双向互验
 
 支持 `Observed0106`（572088 字节，头部 `060100003eeacea6b8ba0800`）和
@@ -159,10 +169,10 @@ UI 层使用 `gpui-kit 0.6.4`（重导出 GPUI 与组件库），具体版本见
 python -m pip install -r ../reference/python/requirements.txt
 $env:PYTHONPATH = '../reference/python'
 python -m unittest discover -s ../reference/python/tests -v
-cargo test --workspace --locked
+cargo test --workspace --profile ci --locked
 python scripts/oracle_crosscheck.py target/oracle
 $env:HD2_REQUIRE_PYTHON_ORACLE = '1'
-cargo test -p sav_codec --test oracle --locked
+cargo test -p sav_codec --test oracle --profile ci --locked
 Remove-Item Env:HD2_REQUIRE_PYTHON_ORACLE
 ```
 
