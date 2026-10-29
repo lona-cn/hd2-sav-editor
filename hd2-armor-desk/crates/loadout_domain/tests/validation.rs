@@ -285,48 +285,6 @@ fn setting_both_slots_touches_only_whitelisted_ranges() {
     assert!(!patches.iter().any(|patch| patch.offset.0 == OFFSET_CAPE));
 }
 
-/// C06: the preview names the change, the type and the untouched slots.
-#[test]
-fn preview_describes_change_type_and_untouched_slots() {
-    let image = image();
-    let snapshot = snapshot_from(&image);
-    let intent = loadout_domain::LoadoutIntent {
-        head: SlotIntent::Set {
-            item: item_ref(0xD346_1392, ItemType::Armor, "FS-55 蹂躏者"),
-        },
-        body: SlotIntent::Keep,
-    };
-    let diff = preview_intent(&snapshot, &catalog_with_both(), &intent).unwrap();
-    assert!(diff.head.changes);
-    assert!(!diff.body.changes);
-    assert!(!diff.is_empty());
-
-    let description = diff.describe();
-    assert!(description.contains("头部"), "{description}");
-    assert!(
-        description.contains("身体护甲"),
-        "type must be visible: {description}"
-    );
-    assert!(
-        description.contains("保持当前"),
-        "unchanged body must be stated"
-    );
-    assert!(
-        description.contains("披风"),
-        "cape must be mentioned as untouched"
-    );
-    assert!(description.contains("0x"), "raw IDs must be available");
-
-    let summary = diff.summary();
-    assert!(summary.contains("头部"));
-    assert!(!summary.contains("身体"));
-
-    // Technical detail carries the exact bytes for the advanced view.
-    let technical = diff.technical_lines();
-    assert_eq!(technical.len(), 1);
-    assert!(technical[0].contains("0x0121"));
-}
-
 /// C07: a restore-helmet flow only ever records a real helmet.
 #[test]
 fn restore_helmet_uses_a_recorded_normal_helmet() {

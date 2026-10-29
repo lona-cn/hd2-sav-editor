@@ -304,35 +304,25 @@ impl AppState {
     fn slot_label(&self, slot: TargetSlot) -> String {
         let (intent, disk_id, prefer) = match slot {
             TargetSlot::Head => (
-                self.draft.as_ref().map(|draft| draft.intent().head.clone()),
+                self.draft.as_ref().map(|draft| &draft.intent().head),
                 self.snapshot.as_ref().and_then(Snapshot::head_id),
                 Some(ItemType::Armor),
             ),
             TargetSlot::Body => (
-                self.draft.as_ref().map(|draft| draft.intent().body.clone()),
+                self.draft.as_ref().map(|draft| &draft.intent().body),
                 self.snapshot.as_ref().and_then(Snapshot::body_id),
                 Some(ItemType::Armor),
             ),
         };
 
         match intent {
-            Some(SlotIntent::Set { item }) => {
-                let type_note = item.item_type.label();
-                format!("{}（{type_note}）", item.label())
-            }
+            Some(SlotIntent::Set { item }) => item.label(),
             _ => match disk_id {
                 Some(id) => match self.item_by_id(id, prefer) {
-                    Some(item) => {
-                        let name = if item.display_name.trim().is_empty() {
-                            "未命名".to_string()
-                        } else {
-                            item.display_name.clone()
-                        };
-                        format!("{name}（当前存档值 · 0x{id:08X}）")
-                    }
-                    None => format!("未知物品 · 0x{id:08X}（不在目录中）"),
+                    Some(item) => item.label(),
+                    None => format!("未知装备 · 0x{id:08X}"),
                 },
-                None => "未读取".to_string(),
+                None => "未打开存档".to_string(),
             },
         }
     }
@@ -413,9 +403,7 @@ impl AppState {
             self.diff = None;
             return;
         };
-        let snapshot = draft.base().clone();
-        let intent = draft.intent().clone();
-        match preview_intent(&snapshot, catalog, &intent) {
+        match preview_intent(draft.base(), catalog, draft.intent()) {
             Ok(diff) => self.diff = Some(diff),
             Err(error) => {
                 self.diff = None;
@@ -596,18 +584,31 @@ pub fn spawn_watch(
                 let Some(entity) = weak.upgrade() else {
                     return;
                 };
-                // Poll on the UI thread: the read itself is small and bounded, and
-                // doing it here keeps the "no writes while monitoring" rule obvious.
-                let event = entity.update(cx, |state, _| {
-                    if !state.watching || state.reader.generation().0 != generation {
-                        return None;
-                    }
-                    state.reader.poll(Instant::now())
+                let reader = entity.update(cx, |state, _| {
+                    (state.watching && state.reader.generation().0 == generation)
+                        .then(|| state.reader.clone())
                 });
-                let Some(event) = event else {
-                    continue;
+                let Some(mut reader) = reader else {
+                    return;
                 };
-                let _ = weak.update(cx, |state, cx| handle_monitor_event(state, event, cx));
+                // Disk reads, SHA-256 and decoding must never block input or paint.
+                let (reader, event) = cx
+                    .background_spawn(async move {
+                        let event = reader.poll(Instant::now());
+                        (reader, event)
+                    })
+                    .await;
+                let _ = weak.update(cx, |state, cx| {
+                    if !state.watching
+                        || state.reader.generation().0 != generation
+                        || !state.reader.apply_poll(reader)
+                    {
+                        return;
+                    }
+                    if let Some(event) = event {
+                        handle_monitor_event(state, event, cx);
+                    }
+                });
             }
         },
     )
@@ -615,6 +616,9 @@ pub fn spawn_watch(
 
 /// React to one monitoring event.
 pub fn handle_monitor_event(state: &mut AppState, event: MonitorEvent, cx: &mut Context<AppState>) {
+    if event.generation() != state.reader.generation() {
+        return;
+    }
     match event {
         MonitorEvent::Snapshot {
             snapshot, changed, ..
@@ -628,7 +632,7 @@ pub fn handle_monitor_event(state: &mut AppState, event: MonitorEvent, cx: &mut 
                     // A dirty draft must never be silently rebased.
                     draft.mark_conflict(snapshot.as_ref(), local_io::now_stamp());
                     state.status = StatusLine::error(
-                        "检测到存档已被外部更新；草稿保留，请选择“以磁盘为准”或“保留草稿”"
+                        "存档已被其他程序修改。你的选择已保留，可另存副本或确认后写入最新存档"
                             .to_string(),
                     );
                 }
@@ -636,7 +640,7 @@ pub fn handle_monitor_event(state: &mut AppState, event: MonitorEvent, cx: &mut 
                     draft.abandon_to((*snapshot).clone());
                     state.snapshot = Some((*snapshot).clone());
                     state.refresh_diff();
-                    state.status = StatusLine::info("存档已更新，草稿已跟随最新内容".to_string());
+                    state.status = StatusLine::info("已读取最新存档".to_string());
                 }
                 None => {
                     state.snapshot = Some((*snapshot).clone());
@@ -645,11 +649,19 @@ pub fn handle_monitor_event(state: &mut AppState, event: MonitorEvent, cx: &mut 
             cx.notify();
         }
         MonitorEvent::Pending { reason, .. } => {
-            state.last_verify_note = Some(format!("等待写入完成：{reason}"));
+            let note = format!("等待写入完成：{reason}");
+            if state.last_verify_note.as_ref() == Some(&note) {
+                return;
+            }
+            state.last_verify_note = Some(note);
             cx.notify();
         }
         MonitorEvent::ReadError { message, .. } => {
-            state.status = StatusLine::error(format!("监视中断：{message}"));
+            let status = StatusLine::error(format!("无法读取存档：{message}"));
+            if state.status == status {
+                return;
+            }
+            state.status = status;
             cx.notify();
         }
     }
@@ -791,7 +803,7 @@ impl AppState {
                     }
                 }
                 Err(message) => {
-                    self.status = StatusLine::error(format!("写回后未接受新基线：{message}"));
+                    self.status = StatusLine::error(format!("无法读取写回后的存档：{message}"));
                 }
             }
         } else {
@@ -849,7 +861,7 @@ impl AppState {
                     ));
                 }
                 Err(message) => {
-                    self.status = StatusLine::error(format!("恢复后未接受新基线：{message}"));
+                    self.status = StatusLine::error(format!("无法读取恢复后的存档：{message}"));
                 }
             }
         } else {

@@ -608,6 +608,7 @@ fn the_watcher_toggle_flips_and_never_touches_the_file(cx: &mut TestAppContext) 
     });
     cx.run_until_parked();
 
+    click(&mut cx, "toolbar-tools");
     click(&mut cx, "toolbar-watch");
     let watching = cx.update(|_, cx| view.read(cx).state().read(cx).watching);
     assert!(watching, "点击后应开始监视");
@@ -672,7 +673,7 @@ fn restore_is_reachable_and_whole_file_scoped(cx: &mut TestAppContext) {
 
     // The whole-file restore is a distinct, reachable action. It must not be
     // confused with the card's head-only "恢复普通头盔" button.
-    render(&mut cx);
+    click(&mut cx, "toolbar-tools");
     assert!(
         cx.debug_bounds("toolbar-restore").is_some(),
         "恢复整份备份按钮应存在"
@@ -853,96 +854,90 @@ fn browser_renders_armor_passive_details(cx: &mut TestAppContext) {
 }
 
 #[gpui_kit::test]
-fn scrolling_inside_browser_does_not_scroll_the_main_page(cx: &mut TestAppContext) {
+fn scrolling_catalog_keeps_slot_and_save_controls_visible(cx: &mut TestAppContext) {
     let _env = ScratchEnv::install();
     let (_, mut cx) = build(cx);
-    cx.simulate_resize(size(px(1280.0), px(900.0)));
+    cx.simulate_resize(size(px(1200.0), px(680.0)));
     render(&mut cx);
-
-    let viewport_bounds = cx
-        .debug_bounds("main-scroll-viewport")
-        .expect("主滚动区应进入实际布局");
-    let page_anchor_before = cx
-        .debug_bounds("main-scroll-anchor")
-        .expect("主滚动区应显示部署标题");
-    let center = |bounds: gpui_kit::Bounds<Pixels>| {
-        point(
-            bounds.origin.x + bounds.size.width / 2.0,
-            bounds.origin.y + bounds.size.height / 2.0,
-        )
-    };
-
-    scroll_wheel(&mut cx, center(page_anchor_before), -10.0);
-    render(&mut cx);
-
-    let page_anchor_after_first_scroll = cx
-        .debug_bounds("main-scroll-anchor")
-        .expect("主滚动区标题应仍在布局中");
-    assert!(
-        page_anchor_after_first_scroll.origin.y < page_anchor_before.origin.y,
-        "测试前置滚动应先移动外层页面"
-    );
-    scroll_wheel(&mut cx, center(page_anchor_after_first_scroll), -10.0);
-    render(&mut cx);
-
-    let page_anchor_before_list_scroll = cx
-        .debug_bounds("main-scroll-anchor")
-        .expect("主滚动区标题应仍在布局中");
-    assert!(
-        page_anchor_before_list_scroll.origin.y < page_anchor_after_first_scroll.origin.y,
-        "外层页面应在列表滚动前仍有可滚动距离"
-    );
-
-    let list_bounds = cx
-        .debug_bounds("armor-browser-list")
-        .expect("装备库列表应进入实际布局");
-    let item_before = cx
-        .debug_bounds("passive-name-armor:0xD3461392")
-        .expect("内置 FS-55 护甲应进入列表布局");
-    let list_visible_top = if list_bounds.origin.y < viewport_bounds.origin.y {
-        viewport_bounds.origin.y
-    } else {
-        list_bounds.origin.y
-    };
-    let list_scroll_y = list_visible_top + px(10.0);
-    let list_bottom = list_bounds.origin.y + list_bounds.size.height;
-    let viewport_bottom = viewport_bounds.origin.y + viewport_bounds.size.height;
-    assert!(
-        list_scroll_y < list_bottom && list_scroll_y < viewport_bottom,
-        "缩小窗口后，装备库列表仍应有可滚动的可见区域"
-    );
-    let list_scroll_position = point(
-        list_bounds.origin.x + list_bounds.size.width / 2.0,
-        list_scroll_y,
-    );
-
-    scroll_wheel(&mut cx, list_scroll_position, -10.0);
-    render(&mut cx);
-
-    let item_after = cx
-        .debug_bounds("passive-name-armor:0xD3461392")
-        .expect("FS-55 护甲应继续保留布局信息");
-    let page_anchor_after_list_scroll = cx
-        .debug_bounds("main-scroll-anchor")
-        .expect("主滚动区标题应仍在布局中");
-    assert!(
-        item_after.origin.y < item_before.origin.y,
-        "列表内滚轮应移动装备条目"
-    );
+    let first_before = cx.debug_bounds("browser-row-0").unwrap();
+    let head_before = cx.debug_bounds("card-head").unwrap();
+    let save_before = cx.debug_bounds("action-commit").unwrap();
+    let list = cx.debug_bounds("armor-browser-list").unwrap();
+    assert!(list.size.height > px(100.0), "默认窗口中必须能直接浏览装备");
     assert_eq!(
-        page_anchor_after_list_scroll.origin.y, page_anchor_before_list_scroll.origin.y,
-        "鼠标位于装备列表时，外层页面不应跟随滚动"
+        first_before.size.width, list.size.width,
+        "装备行应填满列表宽度"
     );
-
-    scroll_wheel(&mut cx, center(page_anchor_after_list_scroll), -10.0);
+    assert!(list.origin.y + list.size.height <= save_before.origin.y);
+    let center = point(
+        list.origin.x + list.size.width / 2.0,
+        list.origin.y + list.size.height / 2.0,
+    );
+    scroll_wheel(&mut cx, center, -20.0);
     render(&mut cx);
-
-    let page_anchor_after_page_scroll = cx
-        .debug_bounds("main-scroll-anchor")
-        .expect("主滚动区标题应仍在布局中");
+    let first_after = cx.debug_bounds("browser-row-0").unwrap();
     assert!(
-        page_anchor_after_page_scroll.origin.y < page_anchor_after_list_scroll.origin.y,
-        "鼠标移出列表后，外层页面仍应继续滚动"
+        first_after.origin.y < first_before.origin.y,
+        "滚轮应移动列表中的装备"
+    );
+    assert_eq!(cx.debug_bounds("card-head").unwrap(), head_before);
+    assert_eq!(cx.debug_bounds("action-commit").unwrap(), save_before);
+}
+
+#[gpui_kit::test]
+fn catalog_items_after_300_remain_selectable_and_search_resets_the_viewport(
+    cx: &mut TestAppContext,
+) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    open(&view, &mut cx, "valid_baseline.bin");
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.catalog = Catalog::from_items(
+                (0..400)
+                    .map(|index| {
+                        let mut item = Item::new(
+                            ItemType::Armor,
+                            0x1000_0000 + index,
+                            Classification::UserVerified,
+                        );
+                        item.display_name = format!("护甲 {index:04}");
+                        item
+                    })
+                    .collect(),
+            )
+            .unwrap();
+            cx.notify();
+        });
+    });
+    cx.simulate_resize(size(px(1200.0), px(680.0)));
+    render(&mut cx);
+    let list = cx.debug_bounds("armor-browser-list").unwrap();
+    let center = point(
+        list.origin.x + list.size.width / 2.0,
+        list.origin.y + list.size.height / 2.0,
+    );
+    scroll_wheel(&mut cx, center, -100_000.0);
+    render(&mut cx);
+    click(&mut cx, "pick-armor:0x1000018F");
+    assert_eq!(
+        cx.update(|_, cx| view.read(cx).state().read(cx).head_item_key()),
+        Some("armor:0x1000018F".into()),
+        "目录末尾的装备也必须可选，不能因渲染上限丢失"
+    );
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.head_query = "护甲 0000".into();
+            cx.notify();
+        });
+    });
+    click(&mut cx, "pick-armor:0x10000000");
+    assert_eq!(
+        cx.update(|_, cx| view.read(cx).state().read(cx).head_item_key()),
+        Some("armor:0x10000000".into()),
+        "筛选后应回到新结果，而不是留在旧列表底部"
     );
 }
 
@@ -1255,6 +1250,7 @@ fn update_failures_offer_a_releases_page_fallback(cx: &mut TestAppContext) {
     let _env = ScratchEnv::install();
     let (view, mut cx) = build(cx);
 
+    click(&mut cx, "toolbar-tools");
     render(&mut cx);
     assert!(
         cx.debug_bounds("toolbar-update").is_some(),
@@ -1441,4 +1437,34 @@ fn app_state_defaults_are_safe(cx: &mut TestAppContext) {
     // Keep the imports used by the click helper honest about their types.
     let _ = MouseButton::Left;
     let _ = px(0.0);
+}
+
+#[gpui_kit::test]
+fn secondary_views_return_to_a_usable_catalog_at_minimum_size(cx: &mut TestAppContext) {
+    let _env = ScratchEnv::install();
+    let (view, mut cx) = build(cx);
+    open(&view, &mut cx, "valid_baseline.bin");
+    cx.update(|_, cx| {
+        let state = view.read(cx).state().clone();
+        state.update(cx, |state, cx| {
+            state.head_query = "0x01C2A674".into();
+            cx.notify();
+        });
+    });
+    cx.simulate_resize(size(px(960.0), px(640.0)));
+    click(&mut cx, "toolbar-presets");
+    click(&mut cx, "toolbar-tools");
+    click(&mut cx, "toolbar-diagnostics");
+    click(&mut cx, "close-file-info");
+    render(&mut cx);
+    let list = cx.debug_bounds("armor-browser-list").unwrap();
+    let pick = cx.debug_bounds("pick-armor:0x01C2A674").unwrap();
+    assert!(pick.origin.y >= list.origin.y);
+    assert!(pick.origin.y + pick.size.height <= list.origin.y + list.size.height);
+    click(&mut cx, "pick-armor:0x01C2A674");
+    assert_eq!(
+        cx.update(|_, cx| view.read(cx).state().read(cx).head_item_key()),
+        Some("armor:0x01C2A674".into()),
+        "查看预设和文件信息后，最小窗口中仍应能选择装备"
+    );
 }

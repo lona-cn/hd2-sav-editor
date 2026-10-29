@@ -89,7 +89,7 @@ impl MonitorEvent {
 }
 
 /// Tracks the settle window for candidate revisions.
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct StabilityGate {
     candidate: Option<(String, Instant)>,
 }
@@ -114,12 +114,14 @@ impl StabilityGate {
 }
 
 /// Polls one path and produces validated snapshots.
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct StableReader {
     gate: StabilityGate,
     accepted_digest: Option<String>,
     identity: Option<PathIdentity>,
     generation: DocumentGeneration,
+    /// Invalidates an in-flight poll when the UI reopens or writes this document.
+    revision: u64,
 }
 
 impl StableReader {
@@ -137,6 +139,7 @@ impl StableReader {
             self.accepted_digest = None;
         }
         self.identity = Some(identity.clone());
+        self.revision = self.revision.wrapping_add(1);
         Ok(identity)
     }
 
@@ -148,6 +151,18 @@ impl StableReader {
     /// Current path identity, if a document is open.
     pub fn identity(&self) -> Option<&PathIdentity> {
         self.identity.as_ref()
+    }
+
+    /// Accept a background poll only if no open or write superseded its baseline.
+    pub fn apply_poll(&mut self, polled: Self) -> bool {
+        if self.revision != polled.revision
+            || self.generation != polled.generation
+            || self.identity != polled.identity
+        {
+            return false;
+        }
+        *self = polled;
+        true
     }
 
     /// Poll once. `now` is injected so tests control the settle window.
@@ -231,6 +246,7 @@ impl StableReader {
     /// Seed the accepted revision so a freshly opened document is not re-published.
     pub fn seed_accepted(&mut self, digest: impl Into<String>) {
         self.accepted_digest = Some(digest.into());
+        self.revision = self.revision.wrapping_add(1);
     }
 }
 

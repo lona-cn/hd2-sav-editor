@@ -88,6 +88,7 @@ fn main() {
             cx.open_window(
                 WindowOptions {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),
+                    window_min_size: Some(size(px(960.0), px(640.0))),
                     titlebar: Some(gpui_kit::TitlebarOptions {
                         title: Some("Armor Desk · HELLDIVERS 2 双甲配置器".into()),
                         ..Default::default()

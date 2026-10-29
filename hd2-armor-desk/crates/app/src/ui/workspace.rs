@@ -21,14 +21,16 @@ use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::dialog::{DialogAction, DialogFooter};
 use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::notification::Notification;
+use gpui_kit::component::scroll::ScrollableElement as _;
+use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::component::Root;
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::{
-    div, prelude::FluentBuilder as _, px, relative, rgb, App, AppContext as _, Context, Div,
-    Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render, SharedString,
-    StatefulInteractiveElement as _, Styled as _, Subscription, Window,
+    div, list, prelude::FluentBuilder as _, px, relative, rgb, App, AppContext as _, Context, Div,
+    Entity, InteractiveElement as _, IntoElement, ListAlignment, ListState, ParentElement as _,
+    Render, SharedString, StatefulInteractiveElement as _, Styled as _, Subscription, Window,
 };
-use loadout_domain::{HumanReadableDiff, ItemRef, ItemType, LoadoutIntent, SlotIntent, Snapshot};
+use loadout_domain::{HumanReadableDiff, ItemRef, ItemType, SlotIntent, Snapshot};
 
 use super::state::{
     apply_import, format_bytes, list_backups, player_usable, preset_from_draft, slot_accepts,
@@ -39,17 +41,14 @@ use super::state::{
 
 const BG: u32 = 0x08151D;
 const CARD_BG: u32 = 0x10212A;
-const CARD_RAISED: u32 = 0x192F39;
 const CARD_BORDER: u32 = 0x30434C;
 const TEXT: u32 = 0xF1F3EE;
 const MUTED: u32 = 0xA5B4B9;
-const SUBTLE: u32 = 0x789098;
 const ACCENT: u32 = 0xFFE710;
 const ACCENT_DIM: u32 = 0x34371B;
 const DANGER: u32 = 0xF06B67;
 const DANGER_DIM: u32 = 0x321B1E;
 const OK: u32 = 0x65D49A;
-const OK_DIM: u32 = 0x173226;
 const INFO: u32 = 0x74BED0;
 
 type LegalAcknowledgementWriter = fn() -> std::io::Result<()>;
@@ -105,6 +104,11 @@ pub struct WorkspaceView {
     state: Entity<AppState>,
     search_input: Entity<InputState>,
     preset_name_input: Entity<InputState>,
+    browser_list: ListState,
+    browser_entries: Vec<(ItemType, u32)>,
+    browser_width: gpui_kit::Pixels,
+    show_tools: bool,
+    show_presets: bool,
     _subscriptions: Vec<Subscription>,
     legal_acknowledgement_required: bool,
     pending_initial_path: Option<PathBuf>,
@@ -115,17 +119,6 @@ struct CommitRequest {
     snapshot: Snapshot,
     diff: HumanReadableDiff,
     generation: u64,
-}
-
-struct BrowserRow {
-    key: String,
-    name: String,
-    type_label: String,
-    id_hex: String,
-    passive_name: Option<String>,
-    passive_description: Option<String>,
-    usable: bool,
-    selected: bool,
 }
 
 fn begin_commit(
@@ -300,6 +293,11 @@ impl WorkspaceView {
             state,
             search_input,
             preset_name_input,
+            browser_list: ListState::new(0, ListAlignment::Top, px(80.0)),
+            browser_entries: Vec::new(),
+            browser_width: px(0.0),
+            show_tools: false,
+            show_presets: false,
             legal_acknowledgement_required: !acknowledged,
             pending_initial_path: None,
             _subscriptions: subscriptions,
@@ -320,7 +318,7 @@ impl WorkspaceView {
                 return false;
             }
             state.update_state = UpdateState::Checking;
-            state.status = StatusLine::info("正在检查 GitHub 最新 Release…".to_string());
+            state.status = StatusLine::info("正在检查更新…".to_string());
             cx.notify();
             true
         });
@@ -492,7 +490,7 @@ impl WorkspaceView {
     fn open_releases_page(&mut self, cx: &mut Context<Self>) {
         if let Err(error) = open::that_detached(RELEASES_PAGE_URL) {
             self.state.update(cx, |state, cx| {
-                state.status = StatusLine::error(format!("无法打开 Releases 页面：{error}"));
+                state.status = StatusLine::error(format!("无法打开下载页面：{error}"));
                 cx.notify();
             });
         }
@@ -753,6 +751,8 @@ impl WorkspaceView {
             }
             cx.notify();
         });
+        self.browser_list
+            .reset_with_uniform_height(self.browser_entries.len(), px(92.0));
     }
 
     fn open_legal_risk_dialog(
@@ -877,10 +877,10 @@ impl WorkspaceView {
             let mut dialog = dialog
                 .title("打开存档")
                 .width(px(620.0))
-                .child("优先从 Steam userdata 目录中选择；也可以手动浏览任意 .sav 文件。");
+                .child("选择找到的 Steam 存档，或手动浏览文件。");
 
             if candidates.is_empty() {
-                dialog = dialog.child("尚未扫描到候选存档。");
+                dialog = dialog.child("没有找到存档，请手动选择。");
             } else {
                 dialog = dialog.children(candidates.iter().enumerate().map(|(index, row)| {
                     let path = row.path.clone();
@@ -1185,11 +1185,15 @@ impl WorkspaceView {
         };
         let source = snapshot.path.clone();
         let summary = if diff.is_empty() {
-            "当前明确选择与打开时的槽位值相同；风险模式仍会将该选择应用到最新文件。".to_string()
+            "所选装备与当前存档相同；仍可将选择应用到最新存档。".to_string()
         } else {
             diff.summary()
         };
-        let details = diff.technical_lines();
+        let details: Vec<_> = [&diff.head, &diff.body]
+            .into_iter()
+            .filter(|entry| entry.changes)
+            .map(|entry| entry.describe())
+            .collect();
         let request = CommitRequest {
             snapshot,
             diff,
@@ -1213,7 +1217,7 @@ impl WorkspaceView {
                 .child(format!("目标：{source}"))
                 .child(summary)
                 .children(details.into_iter().map(|line| div().child(line)))
-                .child("两种模式都会先创建独立备份，并在替换后回读校验。")
+                .child("写入前会备份原存档，完成后会重新读取并核对。")
                 .child(
                     div()
                         .p_3()
@@ -1222,9 +1226,9 @@ impl WorkspaceView {
                         .text_sm()
                         .text_color(rgb(DANGER))
                         .child(
-                            "风险写入会忽略草稿基线是否过期：先读取当前磁盘文件，\
-                             再把所选头部/身体护甲应用到最新内容。适合游戏内刚切换过装备的情况；\
-                             游戏仍可能在写入后再次覆盖结果。",
+                            "安全写回：存档被其他程序修改时停止写入。\
+                             风险写入：读取最新存档，只替换所选部位，保留其他内容。\
+                             游戏之后仍可能覆盖你的修改。",
                         ),
                 )
                 .footer(
@@ -1417,7 +1421,7 @@ impl WorkspaceView {
         let releases_button = |cx: &mut Context<Self>| {
             Button::new("open-releases-page")
                 .debug_selector(|| "update-open-releases".into())
-                .label("打开 Releases 页面")
+                .label("打开下载页面")
                 .on_click(cx.listener(|view, _, _, cx| view.open_releases_page(cx)))
         };
         let dismiss_button = |cx: &mut Context<Self>| {
@@ -1475,7 +1479,7 @@ impl WorkspaceView {
                     .child(
                         Button::new("download-update")
                             .debug_selector(|| "update-download".into())
-                            .label("下载 ZIP")
+                            .label("下载更新")
                             .primary()
                             .on_click(cx.listener(move |view, _, _, cx| {
                                 view.start_update_download(release_for_download.clone(), cx);
@@ -1541,7 +1545,7 @@ impl WorkspaceView {
                 let receipt_for_install = receipt.clone();
                 base()
                     .child(div().text_sm().text_color(rgb(OK)).child(if can_install {
-                        "下载完成，SHA-256 校验通过"
+                        "下载完成，文件校验通过"
                     } else {
                         "已下载并校验；保存或放弃未保存修改后可安装"
                     }))
@@ -1637,154 +1641,48 @@ impl WorkspaceView {
 
     fn render_header(&self, cx: &mut Context<Self>) -> Div {
         let state = self.state.read(cx);
-        let (file_name, file_meta) = state
-            .snapshot
-            .as_ref()
-            .map(|snapshot| {
-                (
-                    PathBuf::from(&snapshot.path)
-                        .file_name()
-                        .map(|name| name.to_string_lossy().to_string())
-                        .unwrap_or_else(|| "已载入存档".to_string()),
-                    format!("{} · 本机文件", format_bytes(snapshot.raw.len() as u64)),
-                )
-            })
-            .unwrap_or_else(|| {
-                (
-                    "等待载入存档".to_string(),
-                    "打开 testament_new.sav 开始配置".to_string(),
-                )
-            });
-        let writable = state.can_write();
-        let has_snapshot = state.snapshot.is_some();
-        let readonly_reason = state
-            .snapshot
-            .as_ref()
-            .and_then(|snapshot| snapshot.readonly_reason.clone());
-        let dirty = state.is_dirty();
-        let watching = state.watching;
-
+        let file_name = state.snapshot.as_ref().map(|snapshot| {
+            PathBuf::from(&snapshot.path)
+                .file_name()
+                .map(|name| name.to_string_lossy().to_string())
+                .unwrap_or_else(|| "已打开存档".into())
+        });
         div()
             .flex()
+            .flex_shrink_0()
             .items_center()
             .justify_between()
             .gap_4()
-            .px_5()
-            .py_3()
-            .bg(rgb(BG))
-            .border_b_2()
-            .border_color(rgb(ACCENT))
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap_4()
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .w(px(48.0))
-                            .h(px(48.0))
-                            .bg(rgb(ACCENT))
-                            .text_color(rgb(BG))
-                            .text_xl()
-                            .font_semibold()
-                            .child("II"),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap_1()
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(ACCENT))
-                                    .child("SUPER EARTH  /  EQUIPMENT TERMINAL"),
-                            )
-                            .child(
-                                div()
-                                    .text_xl()
-                                    .font_semibold()
-                                    .text_color(rgb(TEXT))
-                                    .child("ARMOR DESK"),
-                            )
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(MUTED))
-                                    .child("HELLDIVERS 2   ·   双甲配装控制台"),
-                            ),
-                    ),
-            )
+            .px_4()
+            .py_2()
+            .border_b_1()
+            .border_color(rgb(CARD_BORDER))
             .child(
                 div()
                     .flex()
                     .items_center()
                     .gap_3()
+                    .child(div().text_lg().font_semibold().child("双甲配置器"))
+                    .child(div().text_sm().text_color(rgb(MUTED)).child("HELLDIVERS 2")),
+            )
+            .child(
+                div()
+                    .flex()
+                    .min_w_0()
+                    .items_center()
+                    .gap_3()
                     .child(
                         div()
-                            .flex()
-                            .flex_col()
-                            .items_end()
-                            .gap_1()
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(SUBTLE))
-                                    .child("LOCAL SAVE  /  本机存档"),
-                            )
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .font_semibold()
-                                    .text_color(rgb(TEXT))
-                                    .child(file_name),
-                            )
-                            .child(div().text_xs().text_color(rgb(MUTED)).child(file_meta)),
+                            .text_sm()
+                            .truncate()
+                            .text_color(rgb(MUTED))
+                            .child(file_name.unwrap_or_else(|| "请先打开存档".into())),
                     )
-                    .when(dirty, |this| {
-                        this.child(
-                            div()
-                                .px_2()
-                                .py_1()
-                                .rounded_md()
-                                .bg(rgb(ACCENT_DIM))
-                                .text_xs()
-                                .text_color(rgb(ACCENT))
-                                .child("有未保存改动"),
-                        )
+                    .when(state.watching, |this| {
+                        this.child(div().text_xs().text_color(rgb(OK)).child("监视中"))
                     })
-                    .when(watching, |this| {
-                        this.child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap_1()
-                                .px_2()
-                                .py_1()
-                                .rounded_md()
-                                .bg(rgb(OK_DIM))
-                                .text_xs()
-                                .text_color(rgb(OK))
-                                .child("监视中"),
-                        )
-                    })
-                    .when(has_snapshot && !writable, |this| {
-                        this.child(
-                            div()
-                                .px_2()
-                                .py_1()
-                                .rounded_md()
-                                .bg(rgb(DANGER_DIM))
-                                .text_xs()
-                                .text_color(rgb(DANGER))
-                                .child("只读"),
-                        )
-                    })
-                    .when_some(readonly_reason, |this, reason| {
-                        this.child(div().text_xs().text_color(rgb(MUTED)).child(reason))
+                    .when(state.snapshot.is_some() && !state.can_write(), |this| {
+                        this.child(div().text_xs().text_color(rgb(DANGER)).child("只读"))
                     }),
             )
     }
@@ -1796,9 +1694,9 @@ impl WorkspaceView {
             (
                 state.head_label(),
                 if state.head_is_armor_in_helmet_slot() {
-                    "身体护甲已部署到头部槽位"
+                    "身体护甲用作头部装备"
                 } else {
-                    "头部装备"
+                    "可选身体护甲或头盔"
                 },
                 state.head_item_key(),
             )
@@ -1806,9 +1704,9 @@ impl WorkspaceView {
             (
                 state.body_label(),
                 if state.body_locked() {
-                    "身体槽位已锁定 · 保持原值"
+                    "已锁定，保留原装备"
                 } else {
-                    "身体槽位已解锁"
+                    "可更换身体护甲"
                 },
                 state.body_item_key(),
             )
@@ -1818,106 +1716,40 @@ impl WorkspaceView {
         let has_selection = item_key.is_some();
         let body_id = state.current_body_id();
 
-        let slot_title = if is_head {
-            "头部槽位"
-        } else {
-            "身体槽位"
-        };
-        let slot_number = if is_head { "01" } else { "02" };
-        let slot_mark = if is_head { "H" } else { "B" };
-
         div()
             .id(if is_head { "head-card" } else { "body-card" })
             .flex_1()
+            .min_w_0()
             .flex()
             .flex_col()
-            .gap_4()
-            .p_5()
+            .gap_2()
+            .p_3()
             .rounded_sm()
-            .bg(rgb(if selected_here { CARD_RAISED } else { CARD_BG }))
+            .bg(rgb(CARD_BG))
             .border_1()
             .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
-            .when(locked, |this| this.opacity(0.9))
             .child(
                 div()
                     .flex()
                     .items_center()
                     .justify_between()
+                    .gap_2()
                     .child(
                         div()
-                            .flex()
-                            .items_center()
-                            .gap_3()
-                            .child(
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .size(px(48.0))
-                                    .rounded_full()
-                                    .border_2()
-                                    .border_color(rgb(if selected_here {
-                                        ACCENT
-                                    } else {
-                                        CARD_BORDER
-                                    }))
-                                    .bg(rgb(BG))
-                                    .text_color(rgb(if selected_here { ACCENT } else { MUTED }))
-                                    .font_semibold()
-                                    .child(slot_mark),
-                            )
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_1()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(rgb(if selected_here {
-                                                ACCENT
-                                            } else {
-                                                SUBTLE
-                                            }))
-                                            .child(format!("LOADOUT  /  {slot_number}")),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_base()
-                                            .font_semibold()
-                                            .text_color(rgb(TEXT))
-                                            .child(slot_title),
-                                    )
-                                    .child(div().text_xs().text_color(rgb(MUTED)).child(sub_label)),
-                            ),
+                            .text_sm()
+                            .font_semibold()
+                            .text_color(rgb(if selected_here { ACCENT } else { TEXT }))
+                            .child(if is_head { "头部" } else { "身体" }),
                     )
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap_2()
-                            .when(locked, |this| {
-                                this.child(div().text_xs().text_color(rgb(SUBTLE)).child("LOCK"))
-                            })
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(if selected_here { ACCENT } else { SUBTLE }))
-                                    .child(slot_number),
-                            ),
-                    ),
+                    .child(div().text_xs().text_color(rgb(MUTED)).child(sub_label)),
             )
             .child(
                 div()
-                    .min_h(px(52.0))
-                    .px_3()
-                    .py_2()
-                    .bg(rgb(BG))
-                    .border_l_2()
-                    .border_color(rgb(if selected_here { ACCENT } else { CARD_BORDER }))
-                    .text_lg()
+                    .min_w_0()
+                    .text_base()
                     .font_semibold()
                     .text_color(rgb(TEXT))
+                    .truncate()
                     .child(label),
             )
             .child(
@@ -1935,12 +1767,14 @@ impl WorkspaceView {
                                 }
                             })
                             .label(if selected_here {
-                                "当前选择目标"
+                                "正在选择"
+                            } else if is_head {
+                                "选择头部装备"
                             } else {
-                                "选择此槽位"
+                                "选择身体装备"
                             })
                             .when(selected_here, |button| button.primary())
-                            .on_click(cx.listener(move |view, _, _, cx| {
+                            .on_click(cx.listener(move |view, _, window, cx| {
                                 view.state.update(cx, |state, cx| {
                                     state.target_slot = slot;
                                     state.status = StatusLine::info(match slot {
@@ -1948,6 +1782,16 @@ impl WorkspaceView {
                                         TargetSlot::Body => "正在为身体槽位选择护甲".to_string(),
                                     });
                                     cx.notify();
+                                });
+                                let query = {
+                                    let state = view.state.read(cx);
+                                    match slot {
+                                        TargetSlot::Head => state.head_query.clone(),
+                                        TargetSlot::Body => state.body_query.clone(),
+                                    }
+                                };
+                                view.search_input.update(cx, |input, cx| {
+                                    input.set_value(query, window, cx);
                                 });
                             })),
                     )
@@ -1986,8 +1830,8 @@ impl WorkspaceView {
                         this.child(
                             Button::new("copy-body-id-to-head")
                                 .debug_selector(|| "action-copy-body-id-to-head".into())
-                                .label("复制身体 ID 到头部")
-                                .tooltip("将当前身体护甲 ID 直接设为头部，目录外的 ID 也可使用")
+                                .label("用作头部装备")
+                                .tooltip("将这件身体护甲用于头部，包括未收录的装备")
                                 .on_click(cx.listener(|view, _, _, cx| {
                                     view.copy_body_id_to_head(cx);
                                 })),
@@ -2013,6 +1857,7 @@ impl WorkspaceView {
                                                 "身体已解锁，可以单独更换".to_string()
                                             });
                                         }
+                                        state.refresh_diff();
                                         cx.notify();
                                     });
                                 })),
@@ -2021,370 +1866,230 @@ impl WorkspaceView {
             )
     }
 
-    fn render_browser(&self, cx: &mut Context<Self>) -> Div {
-        let (rows, total, slot, filter, locked_target) = {
-            let state = self.state.read(cx);
-            let selected_key = match state.target_slot {
-                TargetSlot::Head => state.head_item_key(),
-                TargetSlot::Body => state.body_item_key(),
-            };
-            let rows: Vec<BrowserRow> = state
-                .browser_items()
-                .into_iter()
-                .take(300)
-                .map(|item| BrowserRow {
-                    key: item.item_key.clone(),
-                    name: display_name(item),
-                    type_label: item.item_type.label().to_string(),
-                    id_hex: loadout_domain::ItemId(item.id_u32).hex(),
-                    passive_name: (!item.metadata.passive_tags.is_empty())
-                        .then(|| item.metadata.passive_tags.join(" · ")),
-                    passive_description: item
-                        .metadata
-                        .passive_description
-                        .as_deref()
-                        .filter(|description| !description.trim().is_empty())
-                        .map(str::to_owned),
-                    usable: player_usable(item),
-                    selected: selected_key.as_deref() == Some(item.item_key.as_str()),
-                })
-                .collect();
-            let locked_target = state.target_slot == TargetSlot::Body && state.body_locked();
-            (
-                rows,
-                state.catalog.len(),
-                state.target_slot,
-                state.type_filter,
-                locked_target,
-            )
-        };
-        let shown = rows.len();
-        let empty = rows.is_empty();
-        let target_label = match slot {
-            TargetSlot::Head => "头部槽位",
-            TargetSlot::Body => "身体槽位",
-        };
+    fn render_browser(&mut self, cx: &mut Context<Self>) -> Div {
+        let state = self.state.read(cx);
+        let entries: Vec<_> = state
+            .browser_items()
+            .into_iter()
+            .map(|item| (item.item_type, item.id_u32))
+            .collect();
+        let entries_changed = entries != self.browser_entries;
+        if entries_changed {
+            self.browser_list
+                .reset_with_uniform_height(entries.len(), px(92.0));
+            self.browser_entries = entries;
+        }
+        let count = self.browser_entries.len();
+        let filter = state.type_filter;
+        let empty_catalog = state.catalog.is_empty();
+        let locked = state.target_slot == TargetSlot::Body && state.body_locked();
+        // GPUI 0.3.5 clears off-screen height hints when it measures a new width.
+        // Restore them on the following frame, without measuring the whole catalog.
+        let measured_width = self.browser_list.viewport_bounds().size.width;
+        let width_changed = measured_width != self.browser_width;
+        if width_changed {
+            self.browser_width = measured_width;
+            self.browser_list.clone().with_uniform_item_height(px(92.0));
+        }
+        if entries_changed || width_changed {
+            cx.notify();
+        }
 
         div()
             .flex()
             .flex_col()
-            .gap_3()
-            .p_4()
-            .rounded_sm()
-            .bg(rgb(CARD_BG))
-            .border_1()
+            .flex_1()
+            .min_h_0()
+            .gap_2()
+            .border_t_1()
             .border_color(rgb(CARD_BORDER))
+            .pt_3()
             .child(
                 div()
                     .flex()
+                    .flex_shrink_0()
                     .items_center()
-                    .justify_between()
                     .gap_3()
+                    .child(div().text_base().font_semibold().child("装备库"))
                     .child(
                         div()
-                            .flex()
-                            .items_center()
-                            .gap_3()
-                            .child(
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .size(px(34.0))
-                                    .bg(rgb(ACCENT))
-                                    .text_color(rgb(BG))
-                                    .font_semibold()
-                                    .child("A"),
-                            )
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_1()
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(rgb(ACCENT))
-                                            .child("ARMORY  /  装备数据库"),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_base()
-                                            .font_semibold()
-                                            .text_color(rgb(TEXT))
-                                            .child("装备库"),
-                                    )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .text_color(rgb(MUTED))
-                                            .child(format!("当前目标：{target_label}")),
-                                    ),
-                            ),
-                    )
-                    .child(
-                        div()
-                            .px_2()
-                            .py_1()
-                            .rounded_md()
-                            .bg(rgb(BG))
                             .text_xs()
                             .text_color(rgb(MUTED))
-                            .child(format!("{shown} / {total}")),
-                    ),
-            )
-            .child(Input::new(&self.search_input).aria_label("搜索装备名称或十六进制 ID"))
-            .when(locked_target, |this| {
-                this.child(
-                    div()
-                        .flex()
-                        .items_center()
-                        .justify_between()
-                        .gap_3()
-                        .p_3()
-                        .rounded_md()
-                        .bg(rgb(ACCENT_DIM))
-                        .border_1()
-                        .border_color(rgb(ACCENT))
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap_2()
-                                .text_sm()
-                                .text_color(rgb(ACCENT))
-                                .child("LOCK")
-                                .child("身体槽位受保护；解锁后才能替换装备。"),
-                        )
-                        .child(
-                            Button::new("unlock-body-browser")
-                                .label("解锁身体")
-                                .primary()
-                                .on_click(cx.listener(|view, _, _, cx| {
+                            .child(format!("{count} 件")),
+                    )
+                    .child(div().flex_1())
+                    .children(
+                        [
+                            ("全部", None),
+                            ("身体护甲", Some(ItemType::Armor)),
+                            ("头盔", Some(ItemType::Helmet)),
+                        ]
+                        .into_iter()
+                        .map(|(label, value)| {
+                            Button::new(SharedString::from(format!("filter-{label}")))
+                                .label(label)
+                                .when(filter == value, |button| button.primary())
+                                .when(filter != value, |button| button.ghost())
+                                .toggled(filter == value)
+                                .on_click(cx.listener(move |view, _, _, cx| {
                                     view.state.update(cx, |state, cx| {
-                                        if let Some(draft) = state.draft.as_mut() {
-                                            draft.set_body_locked(false);
-                                            state.status = StatusLine::info(
-                                                "身体已解锁，可以选择装备".to_string(),
-                                            );
-                                        }
+                                        state.type_filter = value;
                                         cx.notify();
                                     });
-                                })),
-                        ),
+                                }))
+                        }),
+                    ),
+            )
+            .child(Input::new(&self.search_input).aria_label("搜索装备名称或 ID"))
+            .when(locked, |this| {
+                this.child(
+                    div()
+                        .text_sm()
+                        .text_color(rgb(ACCENT))
+                        .child("身体已锁定，点击上方“解锁身体”后再选择装备。"),
                 )
             })
             .child(
                 div()
-                    .flex()
-                    .items_center()
-                    .justify_between()
-                    .gap_3()
-                    .child(
-                        div().flex().flex_wrap().gap_2().children(
-                            [
-                                ("全部装备", None),
-                                ("身体护甲", Some(ItemType::Armor)),
-                                ("头盔", Some(ItemType::Helmet)),
-                            ]
-                            .into_iter()
-                            .map(|(label, value)| {
-                                let active = filter == value;
-                                Button::new(SharedString::from(format!("filter-{label}")))
-                                    .label(label)
-                                    .when(active, |button| button.primary())
-                                    .when(!active, |button| button.ghost())
-                                    .toggled(active)
-                                    .on_click(cx.listener(move |view, _, _, cx| {
-                                        view.state.update(cx, |state, cx| {
-                                            state.type_filter = value;
-                                            cx.notify();
-                                        });
-                                    }))
-                                    .into_any_element()
-                            }),
-                        ),
-                    )
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(rgb(SUBTLE))
-                            .child("最多显示 300 项"),
-                    ),
-            )
-            .child(
-                div()
                     .id("browser-list")
                     .debug_selector(|| "armor-browser-list".into())
-                    .flex()
-                    .flex_col()
-                    .gap_1()
-                    .max_h(px(360.0))
-                    .overflow_y_scroll()
-                    .on_scroll_wheel(|_, _, cx| cx.stop_propagation())
-                    .when(empty, |this| {
+                    .relative()
+                    .flex_1()
+                    .min_h_0()
+                    .overflow_hidden()
+                    .when(count == 0, |this| {
                         this.child(
                             div()
                                 .flex()
                                 .flex_col()
+                                .size_full()
                                 .items_center()
                                 .justify_center()
                                 .gap_2()
-                                .h(px(150.0))
-                                .rounded_md()
-                                .bg(rgb(BG))
+                                .text_sm()
                                 .text_color(rgb(MUTED))
-                                .child("—")
-                                .child(
-                                    div()
-                                        .text_sm()
-                                        .child("没有匹配的装备，试试名称或十六进制 ID"),
-                                ),
+                                .child(if empty_catalog {
+                                    "装备库为空，请先导入装备目录。"
+                                } else {
+                                    "没有找到装备，试试其他名称或 ID。"
+                                }),
                         )
                     })
-                    .children(rows.into_iter().map(|row| {
-                        let BrowserRow {
-                            key,
-                            name,
-                            type_label,
-                            id_hex,
-                            passive_name,
-                            passive_description,
-                            usable,
-                            selected,
-                        } = row;
-                        let key_for_click = key.clone();
-                        div()
-                            .id(SharedString::from(format!("item-{key}")))
-                            .flex()
-                            .items_center()
-                            .justify_between()
-                            .gap_3()
-                            .px_3()
-                            .py_2()
-                            .rounded_sm()
-                            .bg(rgb(if selected { ACCENT_DIM } else { BG }))
-                            .border_1()
-                            .border_color(rgb(if selected { ACCENT } else { CARD_BORDER }))
-                            .when(!usable, |this| this.opacity(0.65))
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_1()
-                                    .min_w_0()
-                                    .items_center()
-                                    .gap_3()
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .items_center()
-                                            .justify_center()
-                                            .size(px(30.0))
-                                            .rounded_sm()
-                                            .bg(rgb(if selected { ACCENT } else { CARD_RAISED }))
-                                            .text_color(rgb(if selected { BG } else { MUTED }))
-                                            .child(if type_label == "身体护甲" {
-                                                "甲"
-                                            } else {
-                                                "盔"
-                                            }),
-                                    )
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .flex_1()
-                                            .min_w_0()
-                                            .flex_col()
-                                            .gap_1()
-                                            .child(
-                                                div().text_sm().text_color(rgb(TEXT)).child(name),
-                                            )
-                                            .child(
-                                                div()
-                                                    .text_xs()
-                                                    .text_color(rgb(MUTED))
-                                                    .child(id_hex),
-                                            )
-                                            .when_some(passive_name, {
-                                                let key = key.clone();
-                                                move |this, passive_name| {
-                                                    this.child(
-                                                        div()
-                                                            .debug_selector(move || {
-                                                                format!("passive-name-{key}")
-                                                            })
-                                                            .text_xs()
-                                                            .text_color(rgb(ACCENT))
-                                                            .child(format!(
-                                                                "被动 · {passive_name}"
-                                                            )),
-                                                    )
-                                                }
-                                            })
-                                            .when_some(passive_description, {
-                                                let key = key.clone();
-                                                move |this, description| {
-                                                    this.child(
-                                                        div()
-                                                            .debug_selector(move || {
-                                                                format!("passive-description-{key}")
-                                                            })
-                                                            .text_xs()
-                                                            .text_color(rgb(MUTED))
-                                                            .child(description),
-                                                    )
-                                                }
-                                            }),
-                                    ),
+                    .when(count > 0, |this| {
+                        this.child(
+                            list(
+                                self.browser_list.clone(),
+                                cx.processor(|view, index, _, cx| {
+                                    view.render_browser_row(index, cx)
+                                }),
                             )
-                            .child(
+                            .size_full(),
+                        )
+                        .vertical_scrollbar(&self.browser_list)
+                    }),
+            )
+    }
+
+    fn render_browser_row(&self, index: usize, cx: &Context<Self>) -> gpui_kit::AnyElement {
+        let state = self.state.read(cx);
+        let Some(&(item_type, id)) = self.browser_entries.get(index) else {
+            return div().into_any_element();
+        };
+        let Some(item) = state.catalog.get_typed(id, item_type) else {
+            return div().into_any_element();
+        };
+        let selected = state.draft.as_ref().is_some_and(|draft| {
+            let intent = match state.target_slot {
+                TargetSlot::Head => &draft.intent().head,
+                TargetSlot::Body => &draft.intent().body,
+            };
+            matches!(intent, SlotIntent::Set { item: selected } if selected.item_key == item.item_key)
+        });
+        let locked = state.target_slot == TargetSlot::Body && state.body_locked();
+        let usable = player_usable(item) && slot_accepts(state.target_slot, item.item_type);
+        let disabled = locked || !usable || !state.can_write() || state.save_in_flight;
+        let key = item.item_key.clone();
+        let key_for_click = key.clone();
+        let details = format!(
+            "{} · 0x{:08X} · {}",
+            display_name(item),
+            item.id_u32,
+            item.item_type.label()
+        );
+        div()
+            .id(SharedString::from(format!("item-{key}")))
+            .debug_selector(move || format!("browser-row-{index}"))
+            .w_full()
+            .flex()
+            .items_center()
+            .justify_between()
+            .gap_4()
+            .px_3()
+            .py_3()
+            .min_h(px(76.0))
+            .border_b_1()
+            .border_color(rgb(CARD_BORDER))
+            .bg(rgb(if selected { ACCENT_DIM } else { BG }))
+            .child(
+                div()
+                    .id(SharedString::from(format!("item-details-{key}")))
+                    .flex()
+                    .flex_1()
+                    .min_w_0()
+                    .flex_col()
+                    .gap_1()
+                    .tooltip(move |window, cx| Tooltip::new(details.clone()).build(window, cx))
+                    .child(div().text_sm().font_semibold().child(display_name(item)))
+                    .when(!item.metadata.passive_tags.is_empty(), |this| {
+                        let key = key.clone();
+                        this.child(
+                            div()
+                                .debug_selector(move || format!("passive-name-{key}"))
+                                .text_xs()
+                                .text_color(rgb(MUTED))
+                                .child(item.metadata.passive_tags.join(" · ")),
+                        )
+                    })
+                    .when_some(
+                        item.metadata.passive_description.as_ref(),
+                        |this, description| {
+                            let key = key.clone();
+                            this.child(
                                 div()
-                                    .flex()
-                                    .items_center()
-                                    .gap_2()
-                                    .child(
-                                        div()
-                                            .px_2()
-                                            .py_1()
-                                            .rounded_sm()
-                                            .bg(rgb(CARD_RAISED))
-                                            .text_xs()
-                                            .text_color(rgb(MUTED))
-                                            .child(type_label),
-                                    )
-                                    .child(
-                                        Button::new(SharedString::from(format!("pick-{key}")))
-                                            .debug_selector({
-                                                let key = key.clone();
-                                                move || format!("pick-{key}")
-                                            })
-                                            .label(if locked_target {
-                                                "先解锁"
-                                            } else if selected {
-                                                "已选择"
-                                            } else if usable {
-                                                "选择"
-                                            } else {
-                                                "不可用"
-                                            })
-                                            .when(selected, |button| button.success())
-                                            .when(usable && !selected, |button| button.primary())
-                                            .when(locked_target, |button| button.disabled(true))
-                                            .tooltip(if locked_target {
-                                                "先解除身体槽位保护".to_string()
-                                            } else if usable {
-                                                format!("应用到{target_label}")
-                                            } else {
-                                                "此条目缺少可用的装备类型，不能写入".to_string()
-                                            })
-                                            .on_click(cx.listener(move |view, _, _, cx| {
-                                                view.select_item(&key_for_click, cx);
-                                            })),
-                                    ),
+                                    .debug_selector(move || format!("passive-description-{key}"))
+                                    .text_xs()
+                                    .text_color(rgb(MUTED))
+                                    .child(description.clone()),
                             )
-                            .into_any_element()
+                        },
+                    ),
+            )
+            .child(
+                Button::new(SharedString::from(format!("pick-{key}")))
+                    .debug_selector(move || format!("pick-{key}"))
+                    .label(if selected {
+                        "已选择"
+                    } else if !usable {
+                        "不可用"
+                    } else {
+                        "选择"
+                    })
+                    .when(selected, |button| button.primary())
+                    .disabled(disabled)
+                    .tooltip(if !state.can_write() {
+                        "请先打开可编辑的存档"
+                    } else if locked {
+                        "请先解锁身体"
+                    } else if !usable {
+                        "此装备不能用于当前部位"
+                    } else {
+                        "用于当前选择的部位"
+                    })
+                    .on_click(cx.listener(move |view, _, _, cx| {
+                        view.select_item(&key_for_click, cx);
                     })),
             )
+            .into_any_element()
     }
 
     fn render_diff_bar(&self, cx: &mut Context<Self>) -> Div {
@@ -2393,12 +2098,7 @@ impl WorkspaceView {
             .diff
             .as_ref()
             .map(|diff| diff.summary())
-            .unwrap_or_else(|| "打开存档后，改动会在这里集中预览".to_string());
-        let details: Vec<String> = state
-            .diff
-            .as_ref()
-            .map(|diff| diff.technical_lines().into_iter().take(2).collect())
-            .unwrap_or_default();
+            .unwrap_or_else(|| "打开存档，选择装备后保存".to_string());
         let dirty = state.is_dirty();
         let can_write = state.can_write();
         let busy = state.save_in_flight;
@@ -2413,7 +2113,9 @@ impl WorkspaceView {
         } else {
             "当前无改动"
         };
-        let state_color = if in_conflict {
+        let state_color = if state.snapshot.is_none() {
+            MUTED
+        } else if in_conflict {
             DANGER
         } else if dirty || busy {
             ACCENT
@@ -2424,12 +2126,19 @@ impl WorkspaceView {
         div()
             .flex()
             .flex_col()
+            .flex_shrink_0()
             .gap_2()
             .px_5()
             .py_3()
             .bg(rgb(CARD_BG))
-            .border_t_2()
-            .border_color(rgb(if in_conflict { DANGER } else if dirty { ACCENT } else { CARD_BORDER }))
+            .border_t_1()
+            .border_color(rgb(if in_conflict {
+                DANGER
+            } else if dirty {
+                ACCENT
+            } else {
+                CARD_BORDER
+            }))
             .child(
                 div()
                     .flex()
@@ -2440,48 +2149,15 @@ impl WorkspaceView {
                         div()
                             .flex()
                             .items_center()
-                            .gap_3()
+                            .gap_2()
                             .child(
                                 div()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .size(px(36.0))
-                                    .rounded_full()
-                                    .border_2()
-                                    .border_color(rgb(state_color))
-                                    .bg(rgb(if dirty { ACCENT_DIM } else { OK_DIM }))
+                                    .text_sm()
+                                    .font_semibold()
                                     .text_color(rgb(state_color))
-                                    .child(if dirty { "Δ" } else { "✓" }),
+                                    .child(state_label),
                             )
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_1()
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .items_center()
-                                            .gap_2()
-                                            .child(
-                                                div()
-                                                    .text_xs()
-                                                    .font_semibold()
-                                                    .text_color(rgb(state_color))
-                                                    .child(format!("SAVE STATUS  /  {state_label}")),
-                                            )
-                                            .child(
-                                                div()
-                                                    .text_sm()
-                                                    .text_color(rgb(TEXT))
-                                                    .child(summary),
-                                            ),
-                                    )
-                                    .children(details.into_iter().map(|line| {
-                                        div().text_xs().text_color(rgb(MUTED)).child(line)
-                                    })),
-                            ),
+                            .child(div().text_sm().text_color(rgb(MUTED)).child(summary)),
                     )
                     .child(
                         div()
@@ -2548,7 +2224,7 @@ impl WorkspaceView {
                         .text_color(rgb(DANGER))
                         .child("!")
                         .child(
-                            "磁盘存档已更新：草稿仍保留。可另存副本，或在写回确认中选择“风险写入最新文件”。",
+                            "存档已被其他程序修改。可另存副本，或确认后将所选装备写入最新存档。",
                         ),
                 )
             })
@@ -2560,33 +2236,26 @@ impl WorkspaceView {
         let has_snapshot = state.snapshot.is_some();
         let busy = state.save_in_flight;
         let diagnostics = state.show_diagnostics;
-        let dirty = state.is_dirty();
         let update_busy = state.update_state.is_busy();
-
         div()
             .flex()
-            .items_center()
-            .gap_3()
-            .px_5()
+            .flex_col()
+            .flex_shrink_0()
+            .gap_2()
+            .px_4()
             .py_2()
-            .bg(rgb(CARD_RAISED))
-            .border_b_1()
-            .border_color(rgb(CARD_BORDER))
             .child(
                 div()
                     .flex()
                     .items_center()
-                    .gap_1()
-                    .p_1()
-                    .rounded_sm()
-                    .bg(rgb(BG))
+                    .gap_2()
                     .child(
                         Button::new("open-save")
+                            .debug_selector(|| "toolbar-open".into())
                             .label("打开存档")
-                            .primary()
-                            .tooltip("选择本机 HELLDIVERS 2 存档")
-                            .when(busy, |button| button.disabled(true))
-                            .on_click(cx.listener(|view, _, window, cx| {
+                            .when(!has_snapshot, |button| button.primary())
+                            .disabled(busy)
+                            .on_click(cx.listener(|view, _, _, cx| {
                                 let start = view
                                     .state
                                     .read(cx)
@@ -2605,14 +2274,15 @@ impl WorkspaceView {
                                 if let Some(path) = dialog.pick_file() {
                                     view.open_path(path, cx);
                                 }
-                                let _ = window;
                             })),
                     )
                     .child(
                         Button::new("discover")
                             .debug_selector(|| "toolbar-discover".into())
                             .label("自动查找")
-                            .tooltip("扫描 Steam 安装目录下的 userdata")
+                            .ghost()
+                            .disabled(busy)
+                            .tooltip("查找 Steam 存档")
                             .on_click(cx.listener(|view, _, window, cx| {
                                 let task = view.state.update(cx, |_, cx| spawn_discover(cx));
                                 let view = cx.entity();
@@ -2635,229 +2305,141 @@ impl WorkspaceView {
                                     })
                                     .detach();
                             })),
-                    ),
-            )
-            .child(div().w(px(1.0)).h(px(24.0)).bg(rgb(CARD_BORDER)))
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap_1()
-                    .child(
-                        Button::new("import")
-                            .debug_selector(|| "toolbar-import".into())
-                            .label("导入目录")
-                            .ghost()
-                            .tooltip("导入 JSON 或 CSV 护甲目录")
-                            .on_click(cx.listener(|view, _, window, cx| {
-                                view.open_import_dialog(window, cx);
-                            })),
                     )
+                    .child(div().flex_1())
                     .child(
-                        Button::new("preset")
-                            .label("保存预设")
+                        Button::new("presets-toggle")
+                            .debug_selector(|| "toolbar-presets".into())
+                            .label("预设")
                             .ghost()
-                            .tooltip("保存当前双甲选择，便于再次应用")
-                            .when(!dirty, |button| button.disabled(true))
-                            .on_click(cx.listener(|view, _, window, cx| {
-                                view.open_preset_dialog(window, cx);
-                            })),
-                    )
-                    .child(
-                        Button::new("restore")
-                            .debug_selector(|| "toolbar-restore".into())
-                            .label("恢复备份")
-                            .ghost()
-                            .tooltip("用历史备份替换整份当前存档")
-                            .when(!has_snapshot || busy, |button| button.disabled(true))
-                            .on_click(cx.listener(|view, _, window, cx| {
-                                view.open_restore_dialog(window, cx);
-                            })),
-                    ),
-            )
-            .child(div().flex_1())
-            .child(
-                Button::new("check-update")
-                    .debug_selector(|| "toolbar-update".into())
-                    .label(if update_busy {
-                        "更新处理中…"
-                    } else {
-                        "检查更新"
-                    })
-                    .ghost()
-                    .tooltip(format!("当前版本：{CURRENT_RELEASE_TAG}"))
-                    .when(update_busy, |button| button.disabled(true))
-                    .on_click(cx.listener(|view, _, _, cx| {
-                        view.start_update_check(cx);
-                    })),
-            )
-            .child(
-                Button::new("watch")
-                    .debug_selector(|| "toolbar-watch".into())
-                    .label(if watching {
-                        "停止监视"
-                    } else {
-                        "只读监视"
-                    })
-                    .when(watching, |button| button.success())
-                    .when(!watching, |button| button.ghost())
-                    .toggled(watching)
-                    .tooltip("监视磁盘变化；监视本身绝不写盘")
-                    .when(!has_snapshot, |button| button.disabled(true))
-                    .on_click(cx.listener(|view, _, _, cx| {
-                        let start = {
-                            let state = view.state.read(cx);
-                            !state.watching && state.snapshot.is_some()
-                        };
-                        if start {
-                            view.start_watching(cx);
-                        } else {
-                            view.state.update(cx, |state, cx| {
-                                state.watching = false;
-                                state.status =
-                                    StatusLine::info("已停止监视（监视期间从不写盘）".to_string());
+                            .toggled(self.show_presets)
+                            .on_click(cx.listener(|view, _, _, cx| {
+                                view.show_presets = !view.show_presets;
+                                if view.show_presets {
+                                    view.state.update(cx, |state, cx| {
+                                        if state.show_diagnostics {
+                                            state.show_diagnostics = false;
+                                            cx.notify();
+                                        }
+                                    });
+                                }
                                 cx.notify();
-                            });
-                        }
-                    })),
-            )
-            .child(
-                Button::new("diagnostics")
-                    .label(if diagnostics {
-                        "收起诊断"
-                    } else {
-                        "诊断"
-                    })
-                    .ghost()
-                    .toggled(diagnostics)
-                    .tooltip("显示文件校验值与工作区路径")
-                    .on_click(cx.listener(|view, _, _, cx| {
-                        view.state.update(cx, |state, cx| {
-                            state.show_diagnostics = !state.show_diagnostics;
-                            cx.notify();
-                        });
-                    })),
-            )
-    }
-
-    fn render_guide(&self, cx: &mut Context<Self>) -> Div {
-        let state = self.state.read(cx);
-        let opened = state.snapshot.is_some();
-        let dirty = state.is_dirty();
-        let committed = state.last_commit.is_some() && !dirty;
-        let steps = [
-            ("01", "打开存档", "读取并校验本机文件", opened, !opened),
-            (
-                "02",
-                "配置双甲",
-                "选择头部与身体装备",
-                dirty,
-                opened && !dirty,
-            ),
-            (
-                "03",
-                "写回存档",
-                "安全或风险模式均会备份回读",
-                committed,
-                dirty,
-            ),
-        ];
-
-        div()
-            .flex()
-            .flex_col()
-            .gap_3()
-            .p_4()
-            .rounded_sm()
-            .bg(rgb(CARD_BG))
-            .border_1()
-            .border_color(rgb(CARD_BORDER))
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap_2()
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(rgb(ACCENT))
-                            .child("MISSION  /  03"),
+                            })),
                     )
                     .child(
-                        div()
-                            .text_base()
-                            .font_semibold()
-                            .text_color(rgb(TEXT))
-                            .child("操作流程"),
+                        Button::new("tools-toggle")
+                            .debug_selector(|| "toolbar-tools".into())
+                            .label(if self.show_tools {
+                                "收起工具"
+                            } else {
+                                "更多工具"
+                            })
+                            .ghost()
+                            .toggled(self.show_tools)
+                            .on_click(cx.listener(|view, _, _, cx| {
+                                view.show_tools = !view.show_tools;
+                                cx.notify();
+                            })),
                     ),
             )
-            .children(
-                steps
-                    .into_iter()
-                    .map(|(number, label, description, complete, active)| {
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap_3()
-                            .p_2()
-                            .rounded_md()
-                            .bg(rgb(if active { ACCENT_DIM } else { BG }))
-                            .border_1()
-                            .border_color(rgb(if active { ACCENT } else { CARD_BORDER }))
-                            .child(
-                                div()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .size(px(28.0))
-                                    .rounded_full()
-                                    .bg(rgb(if complete { OK_DIM } else { CARD_RAISED }))
-                                    .text_xs()
-                                    .text_color(rgb(if complete {
-                                        OK
-                                    } else if active {
-                                        ACCENT
+            .when(self.show_tools, |this| {
+                this.child(
+                    div()
+                        .flex()
+                        .flex_wrap()
+                        .items_center()
+                        .gap_2()
+                        .child(
+                            Button::new("import")
+                                .debug_selector(|| "toolbar-import".into())
+                                .label("导入装备目录")
+                                .ghost()
+                                .on_click(cx.listener(|view, _, window, cx| {
+                                    view.open_import_dialog(window, cx);
+                                })),
+                        )
+                        .child(
+                            Button::new("restore")
+                                .debug_selector(|| "toolbar-restore".into())
+                                .label("恢复整份备份")
+                                .ghost()
+                                .disabled(!has_snapshot || busy)
+                                .on_click(cx.listener(|view, _, window, cx| {
+                                    view.open_restore_dialog(window, cx);
+                                })),
+                        )
+                        .child(
+                            Button::new("watch")
+                                .debug_selector(|| "toolbar-watch".into())
+                                .label(if watching {
+                                    "停止监视"
+                                } else {
+                                    "只读监视"
+                                })
+                                .ghost()
+                                .toggled(watching)
+                                .disabled(!has_snapshot)
+                                .tooltip("自动读取存档变化，不会写入文件")
+                                .on_click(cx.listener(|view, _, _, cx| {
+                                    let start = {
+                                        let state = view.state.read(cx);
+                                        !state.watching && state.snapshot.is_some()
+                                    };
+                                    if start {
+                                        view.start_watching(cx);
                                     } else {
-                                        SUBTLE
-                                    }))
-                                    .when(complete, |this| this.child("✓"))
-                                    .when(!complete, |this| this.child(number)),
-                            )
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_1()
-                                    .child(
-                                        div()
-                                            .text_sm()
-                                            .text_color(rgb(if active { ACCENT } else { TEXT }))
-                                            .child(label),
-                                    )
-                                    .child(
-                                        div().text_xs().text_color(rgb(MUTED)).child(description),
-                                    ),
-                            )
-                    }),
-            )
-            .child(
-                div()
-                    .flex()
-                    .items_start()
-                    .gap_2()
-                    .p_3()
-                    .rounded_md()
-                    .bg(rgb(OK_DIM))
-                    .text_xs()
-                    .text_color(rgb(OK))
-                    .child("✓")
-                    .child("写回前自动创建独立备份；完成后重新读取并校验文件。"),
-            )
+                                        view.state.update(cx, |state, cx| {
+                                            state.watching = false;
+                                            state.watch_task = None;
+                                            state.status = StatusLine::info("已停止监视");
+                                            cx.notify();
+                                        });
+                                    }
+                                })),
+                        )
+                        .child(
+                            Button::new("check-update")
+                                .debug_selector(|| "toolbar-update".into())
+                                .label(if update_busy {
+                                    "更新处理中…"
+                                } else {
+                                    "检查更新"
+                                })
+                                .ghost()
+                                .disabled(update_busy)
+                                .tooltip(format!("当前版本：{CURRENT_RELEASE_TAG}"))
+                                .on_click(cx.listener(|view, _, _, cx| {
+                                    view.start_update_check(cx);
+                                })),
+                        )
+                        .child(
+                            Button::new("diagnostics")
+                                .debug_selector(|| "toolbar-diagnostics".into())
+                                .label(if diagnostics {
+                                    "收起文件信息"
+                                } else {
+                                    "文件信息"
+                                })
+                                .ghost()
+                                .toggled(diagnostics)
+                                .on_click(cx.listener(|view, _, _, cx| {
+                                    view.show_presets = false;
+                                    view.state.update(cx, |state, cx| {
+                                        state.show_diagnostics = !state.show_diagnostics;
+                                        cx.notify();
+                                    });
+                                })),
+                        ),
+                )
+            })
     }
 
     fn render_diagnostics(&self, cx: &mut Context<Self>) -> Div {
         let state = self.state.read(cx);
         let mut lines: Vec<String> = Vec::new();
+        if let Some(diff) = state.diff.as_ref() {
+            lines.extend(diff.technical_lines());
+        }
         if let Some(snapshot) = state.snapshot.as_ref() {
             lines.push(format!("路径  {}", snapshot.path));
             lines.push(format!("SHA256  {}", snapshot.sha256));
@@ -2904,31 +2486,40 @@ impl WorkspaceView {
         div()
             .flex()
             .flex_col()
+            .flex_1()
+            .min_h_0()
             .gap_2()
-            .p_4()
-            .rounded_lg()
+            .p_3()
             .bg(rgb(CARD_BG))
-            .border_1()
-            .border_color(rgb(CARD_BORDER))
             .child(
                 div()
                     .flex()
+                    .flex_shrink_0()
                     .items_center()
-                    .gap_2()
-                    .child(div().text_xs().text_color(rgb(INFO)).child("i"))
-                    .child(div().text_base().text_color(rgb(TEXT)).child("诊断信息")),
+                    .justify_between()
+                    .child(div().text_sm().font_semibold().child("文件信息"))
+                    .child(
+                        Button::new("close-file-info")
+                            .debug_selector(|| "close-file-info".into())
+                            .label("返回装备库")
+                            .ghost()
+                            .on_click(cx.listener(|view, _, _, cx| {
+                                view.state.update(cx, |state, cx| {
+                                    state.show_diagnostics = false;
+                                    cx.notify();
+                                });
+                            })),
+                    ),
             )
             .child(
                 div()
                     .id("diagnostics-list")
                     .flex()
                     .flex_col()
-                    .gap_1()
-                    .p_3()
-                    .rounded_md()
-                    .bg(rgb(BG))
-                    .max_h(px(220.0))
+                    .flex_1()
+                    .min_h_0()
                     .overflow_y_scroll()
+                    .gap_1()
                     .children(
                         lines
                             .into_iter()
@@ -2942,8 +2533,7 @@ impl WorkspaceView {
                     .gap_2()
                     .text_xs()
                     .text_color(rgb(OK))
-                    .child("LOCAL")
-                    .child("仅在本机处理文件 · 不联网 · 不上传诊断"),
+                    .child("存档仅在本机处理；检查更新时会连接 GitHub。"),
             )
     }
 
@@ -3016,7 +2606,7 @@ impl WorkspaceView {
                     div()
                         .text_xs()
                         .text_color(rgb(MUTED))
-                        .child("以下条目类型未确认，导入后可见但普通模式不会写入："),
+                        .child("以下装备类型尚未确认，导入后可以查看，但不能选择："),
                 )
                 .children(ambiguous.into_iter().map(|(id, name)| {
                     div()
@@ -3052,118 +2642,68 @@ impl WorkspaceView {
     fn render_status(&self, cx: &mut Context<Self>) -> Div {
         let state = self.state.read(cx);
         let error = state.status.is_error;
-        let color = if error { DANGER } else { OK };
+        let color = if error { DANGER } else { MUTED };
         div()
             .flex()
+            .flex_shrink_0()
             .items_center()
-            .gap_3()
-            .px_5()
-            .py_2()
+            .px_4()
+            .py_1()
             .bg(rgb(if error { DANGER_DIM } else { BG }))
-            .border_t_1()
-            .border_color(rgb(if error { DANGER } else { CARD_BORDER }))
-            .child(div().w(px(7.0)).h(px(7.0)).rounded_full().bg(rgb(color)))
-            .child(
-                div()
-                    .text_xs()
-                    .font_semibold()
-                    .text_color(rgb(color))
-                    .child(if error {
-                        "ALERT / 需要处理"
-                    } else {
-                        "SYSTEM / 就绪"
-                    }),
-            )
-            .child(div().w(px(1.0)).h(px(12.0)).bg(rgb(CARD_BORDER)))
             .child(
                 div()
                     .text_sm()
-                    .text_color(rgb(TEXT))
+                    .text_color(rgb(color))
                     .child(state.status.text.clone()),
             )
     }
 
     fn render_presets(&self, cx: &mut Context<Self>) -> Div {
-        let rows: Vec<(String, String, String)> = {
-            let state = self.state.read(cx);
-            state
-                .presets
-                .presets()
-                .iter()
-                .take(20)
-                .map(|preset| {
-                    (
-                        preset.preset_id.clone(),
-                        preset.name.clone(),
-                        describe_preset_intent(preset),
-                    )
-                })
-                .collect()
-        };
-        let count = rows.len();
-        let empty = rows.is_empty();
-
+        let state = self.state.read(cx);
+        let dirty = state.is_dirty();
+        let has_snapshot = state.snapshot.is_some();
+        let rows: Vec<_> = state
+            .presets
+            .presets()
+            .iter()
+            .map(|preset| {
+                (
+                    preset.preset_id.clone(),
+                    preset.name.clone(),
+                    describe_preset_intent(preset),
+                )
+            })
+            .collect();
         div()
             .flex()
             .flex_col()
-            .gap_3()
-            .p_4()
-            .rounded_sm()
+            .flex_shrink_0()
+            .gap_2()
+            .p_3()
             .bg(rgb(CARD_BG))
-            .border_1()
-            .border_color(rgb(CARD_BORDER))
             .child(
                 div()
                     .flex()
                     .items_center()
                     .justify_between()
+                    .child(div().text_sm().font_semibold().child("预设"))
                     .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap_2()
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(ACCENT))
-                                    .child("ARCHIVE  /  P"),
-                            )
-                            .child(
-                                div()
-                                    .text_base()
-                                    .font_semibold()
-                                    .text_color(rgb(TEXT))
-                                    .child("快速预设"),
-                            ),
-                    )
-                    .child(
-                        div()
-                            .px_2()
-                            .py_1()
-                            .rounded_md()
-                            .bg(rgb(BG))
-                            .text_xs()
-                            .text_color(rgb(MUTED))
-                            .child(count.to_string()),
+                        Button::new("save-preset")
+                            .debug_selector(|| "save-preset".into())
+                            .label("保存当前配装")
+                            .ghost()
+                            .disabled(!dirty)
+                            .on_click(cx.listener(|view, _, window, cx| {
+                                view.open_preset_dialog(window, cx);
+                            })),
                     ),
             )
-            .when(empty, |this| {
+            .when(rows.is_empty(), |this| {
                 this.child(
                     div()
-                        .flex()
-                        .flex_col()
-                        .items_center()
-                        .gap_2()
-                        .p_4()
-                        .rounded_md()
-                        .bg(rgb(BG))
+                        .text_xs()
                         .text_color(rgb(MUTED))
-                        .child("—")
-                        .child(
-                            div()
-                                .text_xs()
-                                .child("完成一次配装后，可从顶部保存为预设。"),
-                        ),
+                        .child("还没有预设。选择装备后可保存当前配装。"),
                 )
             })
             .child(
@@ -3171,35 +2711,30 @@ impl WorkspaceView {
                     .id("preset-list")
                     .flex()
                     .flex_col()
-                    .gap_1()
-                    .max_h(px(260.0))
+                    .max_h(px(120.0))
                     .overflow_y_scroll()
-                    .children(rows.into_iter().map(|(preset_id, name, summary)| {
-                        let id_for_apply = preset_id.clone();
+                    .children(rows.into_iter().map(|(id, name, summary)| {
                         div()
-                            .id(SharedString::from(format!("preset-{preset_id}")))
                             .flex()
                             .items_center()
                             .justify_between()
-                            .gap_2()
-                            .p_2()
-                            .rounded_md()
-                            .bg(rgb(BG))
-                            .border_1()
-                            .border_color(rgb(CARD_BORDER))
+                            .gap_3()
+                            .py_2()
                             .child(
                                 div()
                                     .flex()
                                     .flex_col()
+                                    .min_w_0()
                                     .gap_1()
-                                    .child(div().text_sm().text_color(rgb(TEXT)).child(name))
+                                    .child(div().text_sm().child(name))
                                     .child(div().text_xs().text_color(rgb(MUTED)).child(summary)),
                             )
                             .child(
-                                Button::new(SharedString::from(format!("apply-{preset_id}")))
-                                    .tooltip("将此预设应用到当前存档")
+                                Button::new(SharedString::from(format!("apply-{id}")))
+                                    .label("应用")
+                                    .disabled(!has_snapshot)
                                     .on_click(cx.listener(move |view, _, _, cx| {
-                                        view.apply_preset(&id_for_apply, cx);
+                                        view.apply_preset(&id, cx);
                                     })),
                             )
                     })),
@@ -3209,7 +2744,10 @@ impl WorkspaceView {
 
 impl Render for WorkspaceView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let show_diagnostics = self.state.read(cx).show_diagnostics;
+        let (show_diagnostics, has_import) = {
+            let state = self.state.read(cx);
+            (state.show_diagnostics, state.pending_import.is_some())
+        };
         let dialogs = Root::render_dialog_layer(window, cx);
         let sheets = Root::render_sheet_layer(window, cx);
         let notifications = Root::render_notification_layer(window, cx);
@@ -3227,62 +2765,40 @@ impl Render for WorkspaceView {
                     .id("main-scroll")
                     .debug_selector(|| "main-scroll-viewport".into())
                     .flex_1()
-                    .overflow_y_scroll()
+                    .min_h_0()
+                    .overflow_hidden()
                     .flex()
                     .flex_col()
-                    .gap_4()
-                    .p_5()
+                    .gap_3()
+                    .p_4()
                     .child(
                         div()
                             .debug_selector(|| "main-scroll-anchor".into())
                             .flex()
-                            .items_center()
+                            .flex_shrink_0()
                             .gap_3()
-                            .child(div().w(px(28.0)).h(px(2.0)).bg(rgb(ACCENT)))
-                            .child(
-                                div()
-                                    .text_xs()
-                                    .text_color(rgb(ACCENT))
-                                    .child("DEPLOYMENT  /  双甲配装"),
-                            )
-                            .child(div().flex_1().h(px(1.0)).bg(rgb(CARD_BORDER))),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .gap_4()
                             .items_stretch()
                             .child(self.render_slot_card(TargetSlot::Head, cx))
                             .child(self.render_slot_card(TargetSlot::Body, cx)),
                     )
-                    .child(
-                        div()
-                            .flex()
-                            .items_start()
-                            .gap_4()
-                            .child(
-                                div()
-                                    .flex_1()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_4()
-                                    .child(self.render_browser(cx))
-                                    .child(self.render_import_review(cx)),
-                            )
-                            .child(
-                                div()
-                                    .w(px(310.0))
-                                    .flex_shrink_0()
-                                    .flex()
-                                    .flex_col()
-                                    .gap_4()
-                                    .child(self.render_guide(cx))
-                                    .child(self.render_presets(cx))
-                                    .when(show_diagnostics, |this| {
-                                        this.child(self.render_diagnostics(cx))
-                                    }),
-                            ),
-                    ),
+                    .when(self.show_presets, |this| {
+                        this.child(self.render_presets(cx))
+                    })
+                    .when(has_import, |this| {
+                        this.child(
+                            div()
+                                .id("import-review-scroll")
+                                .max_h(px(180.0))
+                                .overflow_y_scroll()
+                                .child(self.render_import_review(cx)),
+                        )
+                    })
+                    .when(!show_diagnostics, |this| {
+                        this.child(self.render_browser(cx))
+                    })
+                    .when(show_diagnostics, |this| {
+                        this.child(self.render_diagnostics(cx))
+                    }),
             )
             .child(self.render_diff_bar(cx))
             .child(self.render_status(cx))
@@ -3313,7 +2829,3 @@ fn describe_preset_intent(preset: &loadout_domain::LoadoutPreset) -> String {
         slot(&preset.body)
     )
 }
-
-/// Silence unused-import warnings for items used only in some build paths.
-#[allow(dead_code)]
-fn _unused(_: LoadoutIntent) {}

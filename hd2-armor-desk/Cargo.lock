@@ -3038,7 +3038,7 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "hd2-armor-desk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "gpui-kit",
  "hd2-updater",
@@ -3056,7 +3056,7 @@ dependencies = [
 
 [[package]]
 name = "hd2-updater"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "open",
  "serde",
@@ -3805,7 +3805,7 @@ checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
 
 [[package]]
 name = "loadout_domain"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "csv",
  "sav_codec",
@@ -3817,7 +3817,7 @@ dependencies = [
 
 [[package]]
 name = "local_io"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "loadout_domain",
  "sav_codec",
@@ -6053,7 +6053,7 @@ dependencies = [
 
 [[package]]
 name = "sav_codec"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crc32fast",
  "lz4_flex",

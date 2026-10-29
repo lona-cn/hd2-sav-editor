@@ -55,7 +55,7 @@ impl DiffEntry {
             let current = self
                 .from
                 .as_ref()
-                .map(|item| format!("{}（{}）", item.label(), item.item_type.label()))
+                .map(|item| item.label())
                 .or_else(|| self.from_id.map(|id| format!("0x{id:08X}")))
                 .unwrap_or_else(|| "未识别".to_string());
             return format!("{}：保持当前（{current}）", self.slot, current = current);
@@ -63,13 +63,13 @@ impl DiffEntry {
         let before = self
             .from
             .as_ref()
-            .map(|item| format!("{}（{}）", item.label(), item.item_type.label()))
+            .map(|item| item.label())
             .or_else(|| self.from_id.map(|id| format!("0x{id:08X}")))
             .unwrap_or_else(|| "未识别".to_string());
         let after = self
             .to
             .as_ref()
-            .map(|item| format!("{}（{}）", item.label(), item.item_type.label()))
+            .map(|item| item.label())
             .or_else(|| self.to_id.map(|id| format!("0x{id:08X}")))
             .unwrap_or_else(|| "未识别".to_string());
         format!("{}：{} → {}", self.slot, before, after)

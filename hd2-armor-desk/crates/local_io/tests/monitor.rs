@@ -265,3 +265,71 @@ fn path_identity_is_not_just_the_file_name() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn background_poll_preserves_the_settle_window() {
+    let dir = temp_dir("background_settle");
+    let path = dir.join("save.sav");
+    std::fs::write(&path, baseline_bytes()).unwrap();
+    let mut reader = StableReader::default();
+    reader.open(&path).unwrap();
+    let start = Instant::now();
+
+    let mut worker = reader.clone();
+    assert!(matches!(
+        worker.poll(start),
+        Some(MonitorEvent::Pending { .. })
+    ));
+    assert!(reader.apply_poll(worker));
+    let mut worker = reader.clone();
+    let event = worker.poll(start + SETTLE_WINDOW);
+    assert!(reader.apply_poll(worker));
+    assert!(matches!(event, Some(MonitorEvent::Snapshot { .. })));
+    assert!(reader.poll(start + SETTLE_WINDOW * 2).is_none());
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn background_poll_cannot_replace_a_reopened_or_written_baseline() {
+    let dir = temp_dir("background_stale");
+    let first = dir.join("first.sav");
+    let second = dir.join("second.sav");
+    let before = baseline_bytes();
+    let after = head_b01_bytes();
+    std::fs::write(&first, &before).unwrap();
+    std::fs::write(&second, &after).unwrap();
+    let mut reader = StableReader::default();
+    reader.open(&first).unwrap();
+    let start = Instant::now();
+
+    let mut worker = reader.clone();
+    worker.poll(start);
+    reader.open(&first).unwrap();
+    assert!(
+        !reader.apply_poll(worker),
+        "same-path reopen supersedes the read"
+    );
+
+    let mut worker = reader.clone();
+    worker.poll(start);
+    std::fs::write(&first, &after).unwrap();
+    reader.seed_accepted(local_io::sha256_hex(&after));
+    assert!(
+        !reader.apply_poll(worker),
+        "a completed write supersedes the read"
+    );
+    assert!(reader.poll(start + SETTLE_WINDOW).is_none());
+
+    let worker = reader.clone();
+    reader.open(&second).unwrap();
+    assert!(
+        !reader.apply_poll(worker),
+        "another document supersedes the read"
+    );
+    assert_eq!(
+        reader.identity().unwrap().canonical,
+        second.canonicalize().unwrap()
+    );
+    assert_eq!(std::fs::read(first).unwrap(), after);
+    std::fs::remove_dir_all(dir).unwrap();
+}

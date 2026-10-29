@@ -11,7 +11,7 @@ pub fn configure_theme(cx: &mut App) {
     {
         let theme = Theme::global_mut(cx);
         theme.mode = ThemeMode::Dark;
-        theme.font_family = "Bahnschrift".into();
+        theme.font_family = "Microsoft YaHei UI".into();
         theme.mono_font_family = "Cascadia Mono".into();
         theme.font_size = px(14.0);
         theme.mono_font_size = px(12.0);
