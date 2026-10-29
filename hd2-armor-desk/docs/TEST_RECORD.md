@@ -32,8 +32,23 @@ Windows 测试和发布构建在独立的 `RUSTUP_HOME` 中按项目工具链文
 - 新 `ci` 配置的 Rust 输出经 Python 校验：两种布局共六份正文、保留压缩块、哈希及双层校验一致。
 - 设置 `HD2_REQUIRE_PYTHON_ORACLE=1`，使用 `ci` 配置验证 Python 输出：**2 passed，0 failed**。
 
-本轮未触发 GitHub 工作流，托管 CI 总耗时为 **NOT RUN**；也未创建新 Release。
+前述本机对照阶段未触发 GitHub 工作流，托管 CI 总耗时当时为 **NOT RUN**；也未创建新 Release。
 GitHub 超过 7 天未访问的缓存仍可能被清理，长期空闲后的冷启动不能仅靠缓存配置消除。
+
+### 缓存 Action 的仓库根目录回归
+
+首次托管运行 [40896508267](https://github.com/lona-cn/hd2-sav-editor/actions/runs/40896508267)
+完成测试、构建和正式发布；Rust 测试构建为 4 分 18 秒，完整测试任务为 5 分 21 秒，总流程为 10 分 49 秒。
+但缓存 Action 在仓库根目录调用 `rustc -vV`，该目录没有 Rust 子工作区的工具链覆盖，
+新的隔离目录也没有默认工具链，因此报错并跳过了缓存，未保存新缓存。任务的绿色结论不等于缓存有效。
+
+补交修正将从项目工具链文件选定的版本导出为 `RUSTUP_TOOLCHAIN`，不额外安装 runner 自带的其他版本。
+使用全新的隔离目录，在仓库根目录做独立进程回归：
+
+- 仅导出 `RUSTUP_HOME`：`rustc -vV` 退出码为 1，复现无默认工具链的错误。
+- 同时导出 `RUSTUP_TOOLCHAIN`：`rustc -vV` 成功，版本为 `1.96.0`，编译器提交哈希与固定工具链一致。
+- 缓存所用工具链枚举仅返回一个固定工具链；从根目录执行 Cargo metadata 可识别五个工作区包。
+- 修正后的工作流再次通过 `actionlint 1.7.12`。
 
 ## 0.1.1 发布前复核
 

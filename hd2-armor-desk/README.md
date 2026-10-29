@@ -152,8 +152,10 @@ CI 使用 `cargo test --workspace --profile ci --locked` 运行全部测试；�
 调试符号和增量编译，保留开发模式的断言与溢出检查。本地默认 `dev` / `test` 和正式 `release` 优化不变。
 下方双向互验命令也使用 `ci` 配置，避免切回默认配置后重复编译。
 
-Windows CI 在独立的 `RUSTUP_HOME` 中按 `rust-toolchain.toml` 安装唯一工具链，再恢复依赖缓存，
-避免 runner 预装的其他 Rust 版本改变缓存指纹。测试与发布构建仍并行执行，二者成功后才发布。
+Windows CI 在独立的 `RUSTUP_HOME` 中按 `rust-toolchain.toml` 安装唯一工具链，
+并将选定的 `RUSTUP_TOOLCHAIN` 导出给后续步骤，让从仓库根目录运行的缓存 Action 也能使用同一编译器。
+随后恢复依赖缓存，避免 runner 预装的其他 Rust 版本改变缓存指纹。
+测试与发布构建仍并行执行，二者成功后才发布。
 GitHub 仍会清理超过 7 天未访问的缓存；长期不提交后的首次运行仍可能需要冷编译。
 
 ### 新旧布局与双向互验
